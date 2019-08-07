@@ -15,6 +15,15 @@ namespace std {
 	template <class _Ty, class _Alloc = allocator<_Ty>>class list;
 }
 
+enum STAGE_PHASE {
+	STAGE_INIT = 0x01,
+	STAGE_RUN = 0x02,
+	STAGE_DONE = 0x03,
+};
+
+
+class CPlayer;
+
 
 class CStage : public IGameScene
 {
@@ -26,6 +35,13 @@ public:
 	ID2D1RenderTarget *GetRenderTarget();
 protected:
 	CSelector	*m_pSystem;
-	bool		m_bGameOver;
+	CPlayer		*m_pPlayer;
+	STAGE_PHASE	m_ePhase;
+	UINT		m_iGameFinishState;
+
+	//	m_iGameFinishState ópíËêî
+	static const int GAME_CLEAR = 0x02;
+	static const int GAME_OVER = 0x04;
 };
+
 

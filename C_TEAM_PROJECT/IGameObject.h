@@ -8,6 +8,12 @@
 
 struct ID2D1RenderTarget;
 
+typedef struct {
+	float fx;
+	float fy;
+	float rad;
+}	CIRCLE_ELEMENTS;
+
 class IGameObject
 {
 public:
@@ -15,14 +21,15 @@ public:
 	virtual bool move() = 0;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) = 0;
 
-	virtual bool collide(float x, float y, float w, float h) {
+	virtual bool collide(float x, float y, float r) {
 		return false;
 	}
 	virtual bool collide(IGameObject *pObj) {
 		return false;
 	}
 	virtual void damage(float amount) {};
-
+protected:
+	CIRCLE_ELEMENTS circle;
 };
 
 

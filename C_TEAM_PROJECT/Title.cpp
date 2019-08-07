@@ -106,6 +106,7 @@ void CTitle::draw(ID2D1RenderTarget *pRenderTarget) {
 	//rc.top = (screenSize.height - textureSize.height) / 2;	//	ƒZƒ“ƒ^ƒŠƒ“ƒO
 	//rc.bottom = rc.top + textureSize.height;
 	//pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+
 	
 	switch (m_ePhase) {
 	case TITLE_FADE:

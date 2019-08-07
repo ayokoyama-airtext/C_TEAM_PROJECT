@@ -152,6 +152,7 @@
     <ClInclude Include="GameOver.h" />
     <ClInclude Include="IGameObject.h" />
     <ClInclude Include="IGameScene.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Selector.h" />
     <ClInclude Include="Stage.h" />
@@ -168,6 +169,7 @@
     <ClCompile Include="GameOver.cpp" />
     <ClCompile Include="IGameObject.cpp" />
     <ClCompile Include="IGameScene.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Stage.cpp" />
     <ClCompile Include="StageSelect.cpp" />

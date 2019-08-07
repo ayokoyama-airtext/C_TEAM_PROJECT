@@ -27,6 +27,7 @@ CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 
 #ifdef _DEBUG
 	m_pWhiteBrush = NULL;
+	m_pRedBrush = NULL;
 	// Direct Write 初期化
 	{
 		HRESULT hr;
@@ -59,6 +60,12 @@ CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 	))) {
 		SAFE_RELEASE(m_pWhiteBrush);
 	}
+	if (FAILED(m_pRenderTarget->CreateSolidColorBrush(
+		D2D1::ColorF(D2D1::ColorF::Red),
+		&m_pRedBrush
+	))) {
+		SAFE_RELEASE(m_pRedBrush);
+	}
 #endif
 
 }
@@ -71,6 +78,7 @@ CSelector::~CSelector()
 	CTextureLoader::Destroy();
 
 #ifdef _DEBUG
+	SAFE_RELEASE(m_pRedBrush);
 	SAFE_RELEASE(m_pWhiteBrush);
 	SAFE_RELEASE(m_pTextFormat);
 #endif
@@ -162,6 +170,7 @@ void CSelector::doDraw(ID2D1RenderTarget *pRenderTarget) {
 	if (m_pScene != NULL)
 		m_pScene->draw(pRenderTarget);
 
+
 #ifdef _DEBUG
 	//	デバッグ用表示
 	TCHAR	str[256];
@@ -177,6 +186,31 @@ void CSelector::doDraw(ID2D1RenderTarget *pRenderTarget) {
 
 	if (m_pWhiteBrush) {
 		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pWhiteBrush);
+	}
+
+	rc.top = 32.f;
+
+	switch (m_eGamePhase) {
+	case GAMEPHASE_TITLE:
+		_stprintf_s(str, _countof(str), _T("GAMESCENE:TITLE"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
+		break;
+	case GAMEPHASE_STAGE_SELECT:
+		_stprintf_s(str, _countof(str), _T("GAMESCENE:STAGE_SELECT"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
+		break;
+	case GAMEPHASE_GAME:
+		_stprintf_s(str, _countof(str), _T("GAMESCENE:GAME"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
+		break;
+	case GAMEPHASE_GAMEOVER:
+		_stprintf_s(str, _countof(str), _T("GAMESCENE:GAME_OVER"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
+		break;
+	case GAMEPHASE_RESULT:
+		_stprintf_s(str, _countof(str), _T("GAMESCENE:RESULT"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
+		break;
 	}
 #endif
 

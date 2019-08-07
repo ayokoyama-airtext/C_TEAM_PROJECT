@@ -46,6 +46,8 @@ GameSceneResultCode CStageSelect::move() {
 		m_ePhase = STAGESELECT_FADE;
 
 	case STAGESELECT_FADE:
+		if (m_iFadeTimer++ < 30)
+			break;
 		m_ePhase = STAGESELECT_DONE;
 
 	case STAGESELECT_DONE:
