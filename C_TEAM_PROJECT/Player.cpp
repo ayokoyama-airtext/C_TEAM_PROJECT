@@ -12,6 +12,7 @@
 
 
 #define FILE_NAME	_T("res\\player.png")
+const float CPlayer::ROTATION_SPEED = 0.05f;
 
 
 CPlayer::CPlayer(CStage *pStage)
@@ -22,7 +23,7 @@ CPlayer::CPlayer(CStage *pStage)
 	circle.fx = (FLOAT)PLAYER_START_X;
 	circle.fy = (FLOAT)PLAYER_START_Y;
 	circle.rad = (FLOAT)PLAYER_RAD;
-	circle.angle = -PI * 0.5f;
+	circle.angle = 0;
 
 	ID2D1RenderTarget *pTarget = pStage->GetRenderTarget();
 	if (pTarget) {
@@ -54,15 +55,15 @@ CPlayer::~CPlayer()
 bool CPlayer::move() {
 
 	if (GetAsyncKeyState(VK_RIGHT)) {
-		circle.angle-= 10.f;
-		if (circle.angle < -2.f * PI) {
-			circle.angle += 2.f * PI;
+		circle.angle += ROTATION_SPEED;
+		if (circle.angle > 2.f * PI) {
+			circle.angle -= 2.f * PI;
 		}
 	}
 	if (GetAsyncKeyState(VK_LEFT)) {
-		circle.angle+= 10.f;
-		if (circle.angle > 2.f * PI) {
-			circle.angle -= 2.f * PI;
+		circle.angle -= ROTATION_SPEED;
+		if (circle.angle < -2.f * PI) {
+			circle.angle += 2.f * PI;
 		}
 	}
 
@@ -86,8 +87,9 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	el.radiusY = (FLOAT)PLAYER_RAD;
 	pRenderTarget->DrawEllipse(el, m_pBrush);
 
+	FLOAT angle = 0;
 	for (int i = 0; i < 5; ++i) {
-		float angle = circle.angle + 3.1415926f * (2.f / 5.f) * i;
+		angle = -PI * 0.5f + circle.angle + PI * (2.f / 5.f) * i;
 		el.point.x = size.width * 0.5f + PLAYER_RAD * cosf(angle);
 		el.point.y = size.height * 0.5f + PLAYER_RAD * sinf(angle);
 		el.radiusX = BELT_RAD;
@@ -102,7 +104,8 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1_POINT_2F point;
 	point.x = rc.left + CORE_LENGTH * 0.5f;
 	point.y = rc.top + CORE_LENGTH * 0.5f;
-	D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(circle.angle, point);
+	angle = 180.f * circle.angle / PI;
+	D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(angle, point);
 	pRenderTarget->SetTransform(rotate);
 	pRenderTarget->DrawRectangle(rc, m_pBrush);
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
