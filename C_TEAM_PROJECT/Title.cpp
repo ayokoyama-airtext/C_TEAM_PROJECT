@@ -41,9 +41,11 @@ CTitle::~CTitle()
 
 /**
 * @brief アニメーションメソッド
-* @return GAMESCENE_DEFAULT:継続 / GAMESCENE_END_OK:ゲーム開始
+* @return GAMESCENE_DEFAULT:シーン継続 / GAMESCENE_END_OK:シーン完了
+* @note GAMESCENE_DEFAULT や GAMESCENE_END_OK を返すことで、Selector に次に進むかどうかを教えています
 */
 GameSceneResultCode CTitle::move() {
+
 	switch (m_ePhase) {
 	case TITLE_INIT:
 		m_iTimer = 0;
@@ -55,11 +57,7 @@ GameSceneResultCode CTitle::move() {
 		bool bDone = false;
 		m_iTimer++;
 
-		if (m_iTimer > 600)
-		{
-			bDone = true;
-		}
-		else if (GetAsyncKeyState(VK_SPACE))
+		if (GetAsyncKeyState(VK_SPACE))
 		{
 			if (!m_bFlag) {
 				bDone = true;

@@ -30,7 +30,9 @@ protected:
 	//	íËêî
 	static const int PLAYER_START_X = 960;
 	static const int PLAYER_START_Y = 540;
-	static const int PLAYER_RAD = 16;
+	static const int PLAYER_RAD = 96;
+	static const int BELT_RAD = 24;
+	static const int CORE_LENGTH = 96;
 
 #ifdef _DEBUG
 	ID2D1SolidColorBrush	*m_pBrush;

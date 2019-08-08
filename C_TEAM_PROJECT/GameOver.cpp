@@ -39,7 +39,8 @@ CGameOver::~CGameOver()
 
 /**
 * @brief アニメーションメソッド
-* @return GAMESCENE_DEFAULT:継続 / GAMESCENE_END_OK:ゲーム開始
+* @return GAMESCENE_DEFAULT:シーン継続 / GAMESCENE_END_OK:シーン完了
+* @note GAMESCENE_DEFAULT や GAMESCENE_END_OK を返すことで、Selector に次に進むかどうかを教えています
 */
 GameSceneResultCode CGameOver::move() {
 	switch (m_ePhase) {
@@ -53,11 +54,7 @@ GameSceneResultCode CGameOver::move() {
 		bool bDone = false;
 		m_iTimer++;
 
-		if (m_iTimer > 600)
-		{
-			bDone = true;
-		}
-		else if (GetAsyncKeyState(VK_SPACE))
+		if (GetAsyncKeyState(VK_SPACE))
 		{
 			if (!m_bFlag) {
 				bDone = true;
@@ -104,6 +101,7 @@ void CGameOver::draw(ID2D1RenderTarget *pRenderTarget) {
 	//rc.top = (screenSize.height - textureSize.height) / 2;	//	センタリング
 	//rc.bottom = rc.top + textureSize.height;
 	//pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+
 
 	switch (m_ePhase) {
 	case GAMEOVER_FADE:

@@ -5,6 +5,7 @@
 */
 #include "stdafx.h"
 #include <d2d1.h>
+#include <cmath>
 #include "Stage.h"
 #include "Player.h"
 #include "TextureLoader.h"
@@ -21,6 +22,7 @@ CPlayer::CPlayer(CStage *pStage)
 	circle.fx = (FLOAT)PLAYER_START_X;
 	circle.fy = (FLOAT)PLAYER_START_Y;
 	circle.rad = (FLOAT)PLAYER_RAD;
+	circle.angle = -PI * 0.5f;
 
 	ID2D1RenderTarget *pTarget = pStage->GetRenderTarget();
 	if (pTarget) {
@@ -50,6 +52,20 @@ CPlayer::~CPlayer()
 *@brief	アニメーションメソッド
 */
 bool CPlayer::move() {
+
+	if (GetAsyncKeyState(VK_RIGHT)) {
+		circle.angle-= 10.f;
+		if (circle.angle < -2.f * PI) {
+			circle.angle += 2.f * PI;
+		}
+	}
+	if (GetAsyncKeyState(VK_LEFT)) {
+		circle.angle+= 10.f;
+		if (circle.angle > 2.f * PI) {
+			circle.angle -= 2.f * PI;
+		}
+	}
+
 	return true;
 }
 
@@ -70,11 +86,26 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	el.radiusY = (FLOAT)PLAYER_RAD;
 	pRenderTarget->DrawEllipse(el, m_pBrush);
 
-	rc.left = (size.width - 48.f) * 0.5f;
-	rc.right = rc.left + 48.f;
-	rc.top = (size.height - 96.f) * 0.5f;
-	rc.bottom = rc.top + 96.f;
-	pRenderTarget->FillRectangle(rc, m_pBrush);
+	for (int i = 0; i < 5; ++i) {
+		float angle = circle.angle + 3.1415926f * (2.f / 5.f) * i;
+		el.point.x = size.width * 0.5f + PLAYER_RAD * cosf(angle);
+		el.point.y = size.height * 0.5f + PLAYER_RAD * sinf(angle);
+		el.radiusX = BELT_RAD;
+		el.radiusY = BELT_RAD;
+		pRenderTarget->DrawEllipse(el, m_pBrush);
+	}
+
+	rc.left = (size.width - CORE_LENGTH) * 0.5f;
+	rc.right = rc.left + CORE_LENGTH;
+	rc.top = (size.height - CORE_LENGTH) * 0.5f;
+	rc.bottom = rc.top + CORE_LENGTH;
+	D2D1_POINT_2F point;
+	point.x = rc.left + CORE_LENGTH * 0.5f;
+	point.y = rc.top + CORE_LENGTH * 0.5f;
+	D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(circle.angle, point);
+	pRenderTarget->SetTransform(rotate);
+	pRenderTarget->DrawRectangle(rc, m_pBrush);
+	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 #endif
 }
 

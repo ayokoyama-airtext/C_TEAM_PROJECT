@@ -12,6 +12,7 @@ typedef struct {
 	float fx;
 	float fy;
 	float rad;
+	float angle;
 }	CIRCLE_ELEMENTS;
 
 class IGameObject
@@ -41,3 +42,4 @@ protected:
 #define SAFE_DELETE(o)  if (o){ delete (o); o = NULL; }
 #define SAFE_DELETE_ARRAY(o) if (o){ delete [] (o); o = NULL; }
 
+#define PI 3.1415926f

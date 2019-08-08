@@ -9,7 +9,8 @@
 #include "Title.h"
 #include "Stage.h"
 #include "GameOver.h"
-#include "StageSelect.h"
+#include "Explain.h"
+#include "Result.h"
 #include "TextureLoader.h"
 
 
@@ -95,6 +96,28 @@ void CSelector::doAnim() {
 	case GAMEPHASE_INIT:
 		m_eGamePhase = GAMEPHASE_RESET;
 
+
+#ifdef hikegami
+		m_eGamePhase = GAMEPHASE_TITLE;
+		m_pScene = new CTitle(this);
+#elif kmiyamoto
+		m_eGamePhase = GAMEPHASE_RESULT;
+		m_pScene = new CResult(this);
+#elif tnakahara
+		m_eGamePhase = GAMEPHASE_EXPLAIN;
+		m_pScene = new CExplain(this);
+#elif sugita-tadayosi
+		m_eGamePhase = GAMEPHASE_GAMEOVER;
+		m_pScene = new CGameOver(this);
+#elif yakihiro || ayokoyama
+		m_eGamePhase = GAMEPHASE_GAME;
+		m_pScene = new CStage(this);
+#else
+		m_eGamePhase = GAMEPHASE_RESET;
+#endif
+
+		break;
+
 	case GAMEPHASE_RESET:
 		SAFE_DELETE(m_pScene);
 		m_pScene = new CTitle(this);
@@ -107,10 +130,10 @@ void CSelector::doAnim() {
 			break;
 
 		SAFE_DELETE(m_pScene);
-		m_pScene = new CStageSelect(this);
-		m_eGamePhase = GAMEPHASE_STAGE_SELECT;
+		m_pScene = new CExplain(this);
+		m_eGamePhase = GAMEPHASE_EXPLAIN;
 
-	case GAMEPHASE_STAGE_SELECT:
+	case GAMEPHASE_EXPLAIN:
 		if (m_pScene != NULL)
 			rc = m_pScene->move();
 		if (rc == GAMESCENE_DEFAULT)
@@ -132,9 +155,10 @@ void CSelector::doAnim() {
 			m_eGamePhase = GAMEPHASE_GAMEOVER;
 		}
 		else {
-			//m_pScene = new CResult(this);
-			//m_eGamePhase = GAMEPHASE_RESULT;
+			m_pScene = new CResult(this);
+			m_eGamePhase = GAMEPHASE_RESULT;
 		}
+		break;
 
 	case GAMEPHASE_GAMEOVER:
 		if (m_pScene != NULL)
@@ -151,9 +175,7 @@ void CSelector::doAnim() {
 		if (rc == GAMESCENE_DEFAULT)
 			break;
 
-		SAFE_DELETE(m_pScene);
-		m_pScene = new CStageSelect(this);
-		m_eGamePhase = GAMEPHASE_STAGE_SELECT;
+		m_eGamePhase = GAMEPHASE_RESET;
 		break;
 	}
 
@@ -195,8 +217,8 @@ void CSelector::doDraw(ID2D1RenderTarget *pRenderTarget) {
 		_stprintf_s(str, _countof(str), _T("GAMESCENE:TITLE"));
 		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
 		break;
-	case GAMEPHASE_STAGE_SELECT:
-		_stprintf_s(str, _countof(str), _T("GAMESCENE:STAGE_SELECT"));
+	case GAMEPHASE_EXPLAIN:
+		_stprintf_s(str, _countof(str), _T("GAMESCENE:EXPLAIN"));
 		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);
 		break;
 	case GAMEPHASE_GAME:

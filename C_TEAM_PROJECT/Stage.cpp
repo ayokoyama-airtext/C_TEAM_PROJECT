@@ -83,12 +83,12 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 		el.radiusY = 540.f;
 		pRenderTarget->DrawEllipse(el, m_pBrush);
 
-		D2D1_RECT_F rc;
-		rc.left = (size.width - 48.f) * 0.5f;
-		rc.right = rc.left + 48.f;
-		rc.top = (size.height - 96.f) * 0.5f;
-		rc.bottom = rc.top + 96.f;
-		pRenderTarget->DrawRectangle(rc, m_pBrush);
+		/*D2D1_RECT_F rc;
+		rc.left = (size.width - 64.f) * 0.5f;
+		rc.right = rc.left + 64.f;
+		rc.top = (size.height - 128.f) * 0.5f;
+		rc.bottom = rc.top + 128.f;
+		pRenderTarget->DrawRectangle(rc, m_pBrush);*/
 
 		D2D1_POINT_2F p0, p1;
 		for (int i = 1; i < 4; ++i) {
