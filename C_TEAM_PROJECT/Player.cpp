@@ -66,8 +66,8 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1_ELLIPSE el;
 	el.point.x = size.width * 0.5f;
 	el.point.y = size.height * 0.5f;
-	el.radiusX = 960.f;
-	el.radiusY = 540.f;
+	el.radiusX = (FLOAT)PLAYER_RAD;
+	el.radiusY = (FLOAT)PLAYER_RAD;
 	pRenderTarget->DrawEllipse(el, m_pBrush);
 
 	rc.left = (size.width - 48.f) * 0.5f;

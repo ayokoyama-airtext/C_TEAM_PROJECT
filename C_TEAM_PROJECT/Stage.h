@@ -23,6 +23,7 @@ enum STAGE_PHASE {
 
 
 class CPlayer;
+struct ID2D1SolidColorBrush;
 
 
 class CStage : public IGameScene
@@ -42,6 +43,10 @@ protected:
 	//	m_iGameFinishState ópíËêî
 	static const int GAME_CLEAR = 0x02;
 	static const int GAME_OVER = 0x04;
+
+#ifdef _DEBUG
+	ID2D1SolidColorBrush	*m_pBrush;
+#endif
 };
 
 
