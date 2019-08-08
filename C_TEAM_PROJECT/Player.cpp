@@ -60,14 +60,21 @@ bool CPlayer::move() {
 void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	D2D1_RECT_F rc, src;
+	D2D1_SIZE_F size = pRenderTarget->GetSize();
 	
 #ifdef _DEBUG
 	D2D1_ELLIPSE el;
-	el.point.x = circle.fx;
-	el.point.y = circle.fy;
-	el.radiusX = (FLOAT)PLAYER_RAD;
-	el.radiusY = (FLOAT)PLAYER_RAD;
+	el.point.x = size.width * 0.5f;
+	el.point.y = size.height * 0.5f;
+	el.radiusX = 960.f;
+	el.radiusY = 540.f;
 	pRenderTarget->DrawEllipse(el, m_pBrush);
+
+	rc.left = (size.width - 48.f) * 0.5f;
+	rc.right = rc.left + 48.f;
+	rc.top = (size.height - 96.f) * 0.5f;
+	rc.bottom = rc.top + 96.f;
+	pRenderTarget->FillRectangle(rc, m_pBrush);
 #endif
 }
 

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <d2d1.h>
 #include <dwrite.h>
+#include <cmath>
 #include "Selector.h"
 
 
@@ -82,30 +83,37 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	RegisterClassEx(&wcex);
 
 
+	
+
 	//	⑴-b ウィンドウの生成
 	hWnd = CreateWindowEx(WS_EX_APPWINDOW, wcex.lpszClassName, _T("C_TEAM_PROJECT"),
 		WS_VISIBLE | WS_POPUP,
-		0, 0, 1920, 1080, NULL, NULL, hInstance, NULL);
+		0, 0, 
+		1920,
+		1080,
+		NULL, NULL, hInstance, NULL);
 	if (!hWnd)
 		return FALSE;
+	
 
-	devMode.dmSize = sizeof(DEVMODE);
+
+
+	/*devMode.dmSize = sizeof(DEVMODE);
 	devMode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
 	devMode.dmPelsWidth = 1920;
 	devMode.dmPelsHeight = 1080;
+	ChangeDisplaySettings(&devMode, CDS_FULLSCREEN);*/
 
-	ChangeDisplaySettings(&devMode, CDS_FULLSCREEN);
-
-	//// ウィンドウサイズの調整
-	//GetWindowRect(hWnd, &bounds); // ウィンドウサイズ	:枠を含んだサイズ
-	//GetClientRect(hWnd, &client); // クライアントサイズ	:枠を含まない表示領域
-	//MoveWindow(hWnd, bounds.left, bounds.top,
-	//	640 * 2 - client.right,		// ウィンドウサイズに枠を足す->クライアントサイズを狙ったサイズにできる
-	//	480 * 2 - client.bottom,
-	//	false);
+	// ウィンドウサイズの調整
+	GetWindowRect(hWnd, &bounds); // ウィンドウサイズ	:枠を含んだサイズ
+	GetClientRect(hWnd, &client); // クライアントサイズ	:枠を含まない表示領域
+	MoveWindow(hWnd, bounds.left, bounds.top,
+		1920 * 2 - client.right,		// ウィンドウサイズに枠を足す->クライアントサイズを狙ったサイズにできる
+		1080 * 2 - client.bottom,
+		false);
 
 	// ウィンドウの再表示
-	ShowWindow(hWnd, nCmdShow);
+	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
 	UpdateWindow(hWnd);
 	//	再表示の際、WndProcが呼び出されることに注意！
 
@@ -116,14 +124,24 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		//	Direct2D Factory の生成
 		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &g_pD2DFactory);
 		GetClientRect(hWnd, &client);
+		//	RenderTarget のサイズ
 		D2D1_SIZE_U size = D2D1::SizeU(
-			client.right - client.left,
-			client.bottom - client.top
+			1920,
+			1080
 		);
+
+		D2D1_RENDER_TARGET_PROPERTIES target;
+		target.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
+		target.pixelFormat = D2D1::PixelFormat();
+		target.usage = D2D1_RENDER_TARGET_USAGE_NONE;
+		target.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
+		target.dpiX = 0;
+		target.dpiY = 0;
+
 
 		//	Direct2D 描画ターゲット の生成
 		hr = g_pD2DFactory->CreateHwndRenderTarget(
-			D2D1::RenderTargetProperties(),
+			target,
 			D2D1::HwndRenderTargetProperties(hWnd, size),
 			&g_pRenderTarget
 		);
