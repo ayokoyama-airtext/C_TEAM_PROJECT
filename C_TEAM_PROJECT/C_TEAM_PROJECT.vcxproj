@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BG.h" />
     <ClInclude Include="C_TEAM_PROJECT.h" />
     <ClInclude Include="ddsfunctions.h" />
     <ClInclude Include="Explain.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="Title.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BG.cpp" />
     <ClCompile Include="C_TEAM_PROJECT.cpp" />
     <ClCompile Include="ddsfunctions.cpp" />
     <ClCompile Include="Explain.cpp" />

@@ -158,6 +158,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	//	ゲームシステム初期化
 	g_pSelector = new CSelector(g_pRenderTarget);
 
+	InvalidateRect(hWnd, NULL, false);
+
 
 	/**************************
 		⑵メッセージループ

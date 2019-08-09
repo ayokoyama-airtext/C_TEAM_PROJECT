@@ -3,7 +3,12 @@
 #include <list>
 #include "Stage.h"
 #include "Player.h"
+#include "BG.h"
 #include "TextureLoader.h"
+
+
+const FLOAT CStage::FIELD_WIDTH = 1920.f * 3.f;
+const FLOAT CStage::FIELD_HEIGHT = 1920.f * 3.f;
 
 
 CStage::CStage(CSelector *pSystem)
@@ -12,6 +17,7 @@ CStage::CStage(CSelector *pSystem)
 	m_iGameFinishState = 0;
 	m_ePhase = STAGE_INIT;
 	m_pPlayer = new CPlayer(this);
+	m_pBG = new CBG(this);
 
 #ifdef _DEBUG
 	m_pBrush = NULL;
@@ -25,6 +31,7 @@ CStage::CStage(CSelector *pSystem)
 
 CStage::~CStage()
 {
+	SAFE_DELETE(m_pBG);
 	SAFE_DELETE(m_pPlayer);
 
 #ifdef _DEBUG
@@ -48,6 +55,10 @@ GameSceneResultCode CStage::move() {
 		if (m_pPlayer)
 			m_pPlayer->move();
 
+
+		if (m_pPlayer)
+			m_pPlayer->CalcDrawCoord(&playerCoords);
+
 		break;
 
 	case STAGE_DONE:
@@ -68,6 +79,9 @@ GameSceneResultCode CStage::move() {
 * @
 */
 void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
+
+	if (m_pBG)
+		m_pBG->draw(pRenderTarget);
 
 	if (m_pPlayer)
 		m_pPlayer->draw(pRenderTarget);

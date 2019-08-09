@@ -9,11 +9,15 @@
 struct ID2D1RenderTarget;
 
 typedef struct {
-	float fx;
-	float fy;
-	float rad;
-	float angle;
-}	CIRCLE_ELEMENTS;
+	FLOAT fx;
+	FLOAT fy;
+	FLOAT fVX;
+	FLOAT fVY;
+	FLOAT rad;
+	FLOAT angle;	//	ÉèÅ[ÉãÉhç¿ïWäÓèÄ
+	FLOAT scale;
+	INT coreHP;
+}	GAMEOBJECT_STATS;
 
 class IGameObject
 {
@@ -29,8 +33,6 @@ public:
 		return false;
 	}
 	virtual void damage(float amount) {};
-protected:
-	CIRCLE_ELEMENTS circle;
 };
 
 
