@@ -122,7 +122,35 @@ GameSceneResultCode CStage::move() {
 			//	moveさせる
 			std::list<IGameObject*>::iterator it = m_pEnemies->begin();
 			while (it != m_pEnemies->end()) {
-				(*it++)->move();
+				if ( (*it)->move() ) {
+					++it;
+				}
+				else {
+					SAFE_DELETE(*it);
+					it = m_pEnemies->erase(it);
+					m_pEnemyManager->DecreaseEnemyCount();
+				}
+			}
+		}
+
+		//********************************
+		//		当たり判定	
+		//********************************
+
+		//	PlayerDotとエネミー
+		if (m_pPlayerDots && m_pEnemies) {
+			std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
+			int i = 0;
+			while ((i < playerCoords.playerMaxDotNum) && (it != m_pPlayerDots->end())) {
+				std::list<IGameObject*>::iterator it2 = m_pEnemies->begin();
+				while (it2 != m_pEnemies->end()) {
+					if ( (*it2)->collide((*it)) ) {
+						(*it2)->damage(1.0f);
+					}
+					++it2;
+				}
+				++it;
+				++i;
 			}
 		}
 

@@ -20,6 +20,7 @@ public:
 	virtual IGameObject *CreateEnemy();
 	virtual void Restore(ID2D1RenderTarget *pTarget);
 	virtual void Finalize();
+	virtual void DecreaseEnemyCount();
 protected:
 	CStage	*m_pParent;
 	int		m_iEnemyCount;	//	現在のエネミーの数

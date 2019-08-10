@@ -52,6 +52,9 @@ CEnemy::~CEnemy()
 *@brief	アニメーションメソッド
 */
 bool CEnemy::move() {
+	if (m_bDamaged)
+		return false;
+
 	m_fAngle += ROTATION_SPEED;
 	if (m_fAngle > 2.f * PI) {
 		m_fAngle -= 2.f * PI;

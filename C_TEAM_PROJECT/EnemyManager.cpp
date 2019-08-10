@@ -53,3 +53,8 @@ void CEnemyManager::Restore(ID2D1RenderTarget *pTarget) {
 void CEnemyManager::Finalize() {
 	CEnemy::Finalize();
 }
+
+
+void CEnemyManager::DecreaseEnemyCount() {
+	--m_iEnemyCount;
+}
