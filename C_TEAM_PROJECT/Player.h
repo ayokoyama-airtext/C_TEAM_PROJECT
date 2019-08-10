@@ -37,6 +37,7 @@ protected:
 	FLOAT	m_fVX;			//	x方向加速度
 	FLOAT	m_fVY;			//	y方向加速度
 	FLOAT	m_fRad;			//	ベルトの半径
+	FLOAT	m_fCoreRad;	//	コアの半径
 	FLOAT	m_fAngle;		//	回転角度 (ワールド座標基準, ラジアン単位)->0rad:右, 0.5PIrad:下, PIrad:左, 1.75PIrad:上
 	FLOAT	m_fScale;		//	大きさ(基本1.0f)
 	INT		m_iDotNum;		//	生きてるドットの数

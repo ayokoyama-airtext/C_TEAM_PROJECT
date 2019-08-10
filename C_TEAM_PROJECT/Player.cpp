@@ -28,6 +28,7 @@ CPlayer::CPlayer(CStage *pStage)
 	m_fVX = 0;
 	m_fVY = 0;
 	m_fRad = (FLOAT)BELT_RAD;
+	m_fCoreRad = (FLOAT)(CORE_LENGTH >> 1);
 	m_fAngle = -PI * 0.5f;
 	m_fScale = 1.0f;
 	m_iDotNum = 5;
@@ -270,7 +271,7 @@ bool CPlayer::collide(float x, float y, float r) {
 *@param [in] pObj	相手オブジェクト
 */
 bool CPlayer::collide(IGameObject *pObj) {
-	float x = m_fX, y = m_fY, r = m_fRad;
+	float x = m_fX, y = m_fY, r = m_fCoreRad;
 
 	return pObj->collide(x, y, r);
 }

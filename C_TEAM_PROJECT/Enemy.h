@@ -32,21 +32,29 @@ protected:
 	FLOAT	m_fVX;			//	x方向加速度
 	FLOAT	m_fVY;			//	y方向加速度
 	FLOAT	m_fRad;			//	ベルトの半径
+	FLOAT	m_fCoreRad;		//	コア半径
 	FLOAT	m_fAngle;		//	回転角度 (ワールド座標基準, ラジアン単位)->0rad:右, 0.5PIrad:下, PIrad:左, 1.75PIrad:上
 	FLOAT	m_fScale;		//	大きさ(基本1.0f)
 	INT		m_iDotNum;		//	生きてるドットの数
 	INT		m_iMaxDotNum;	//	ドットの最大個数(成長するとこれが増える)(最大8?)
 
 	bool	m_bDamaged;
+	INT		m_iTimer;
 
-
+	int		m_iBehaviorFlag;	//	エネミーの行動状態を管理するフラグ
+	//	m_iBehaviorFlag用定数
+	static const int EFLAG_IDLE = 0x01;	//	停止
+	static const int EFLAG_SEARCH = 0x02;	//	索敵
+	static const int EFLAG_CHASE = 0x04;	//	追跡
 
 	//	定数
-	static const int BELT_RAD = 96;		//	ベルト半径
-	static const int DOT_RAD = 24;			//	ドット半径
-	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ
-	static const float ROTATION_SPEED;		//	回転速度
-	static const float ENEMY_SPEED;		//	移動速度
+	static const int BELT_RAD = 96;				//	ベルト半径
+	static const int DOT_RAD = 24;				//	ドット半径
+	static const int CORE_LENGTH = 96;			//	コアの一辺の長さ
+	static const float ROTATION_SPEED;			//	回転速度
+	static const float ENEMY_SPEED;				//	移動速度
+	static const float SEARCH_ANGLE;			//	索敵角度
+	static const int SEARCH_LENGTH = 1200;	//	索敵距離
 
 
 	//	静的メンバ(初期化を忘れずに)

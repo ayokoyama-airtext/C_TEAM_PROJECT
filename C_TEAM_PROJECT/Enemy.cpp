@@ -14,7 +14,7 @@
 #define ENEMY_FILE_NAME	_T("res\\enemy.png")
 const float CEnemy::ROTATION_SPEED = 0.025f;
 const float CEnemy::ENEMY_SPEED = 5.f;
-
+const float CEnemy::SEARCH_ANGLE = cosf(PI * 0.5f);
 
 float CEnemy::m_fFieldWidth = 0.f;
 float CEnemy::m_fFieldHeight = 0.f;
@@ -34,11 +34,15 @@ CEnemy::CEnemy(float x, float y, float scale)
 	m_fVX = 0;
 	m_fVY = 0;
 	m_fRad = BELT_RAD;
+	m_fCoreRad = (FLOAT)(CORE_LENGTH >> 1);
 	m_fScale = scale;
 	m_iDotNum = 5;
 	m_iMaxDotNum = 5;
 	m_fAngle = PI * 0.5f;
 
+	m_iBehaviorFlag = EFLAG_IDLE;
+
+	m_iTimer = 0;
 	m_bDamaged = false;
 }
 
@@ -55,16 +59,107 @@ bool CEnemy::move() {
 	if (m_bDamaged)
 		return false;
 
-	m_fAngle += ROTATION_SPEED;
+
+	//************************************
+	//				準備
+	//************************************
+
+	//	プレイヤーの情報を取得
+	float playerX = m_pParent->playerCoords.playerX;
+	float playerY = m_pParent->playerCoords.playerY;
+	//	プレイヤーとの相対ベクトルを計算
+	float vx = playerX - m_fX;
+	float vy = playerY - m_fY;
+	//	自分の向きを計算
+	float dirVX = cosf(m_fAngle);
+	float dirVY = sinf(m_fAngle);
+
+	//************************************
+	//************************************
+
+
+	//	m_iBehaviorFlagに応じて行動を変化させる
+	switch (m_iBehaviorFlag) {
+	case EFLAG_IDLE:	//	待機
+		m_fVX = 0;
+		m_fVY = 0;
+		m_iTimer++;
+		if (m_iTimer < 120)
+			break;
+
+		m_iBehaviorFlag = EFLAG_SEARCH;
+		m_iTimer = 0;
+		break;
+
+	case EFLAG_SEARCH:	//	索敵
+		{
+			//	プレイヤーとの角度を計算
+			float l = sqrtf(vx * vx + vy * vy);
+			float cos = (dirVX * vx + dirVY * dirVY) / l;
+			if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
+				if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
+					m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
+					break;
+				}
+			}
+
+			//	進行方向を変更
+			m_fAngle += ROTATION_SPEED;
+			//	進行方向へ加速
+			m_fVX = ENEMY_SPEED * dirVX;
+			m_fVY = ENEMY_SPEED * dirVY;
+		}
+
+		break;
+
+	case EFLAG_CHASE:
+		m_iTimer++;
+		{
+			float l = 1.f / sqrtf(vx * vx + vy * vy);
+			float sin = (dirVX * vy - dirVY * vx) * l;
+			float cos = (dirVX * vx + dirVY * vy) * l;
+			if (sin > 0) {	//	プレイヤーは進行方向右側
+				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+					m_fVX = vx * l;
+					m_fVY = vy * l;
+					m_fAngle = atan2(m_fVY, m_fVX);
+					m_fVX *= ENEMY_SPEED;
+					m_fVY *= ENEMY_SPEED;
+				}
+				else {
+					m_fVX = dirVX * ENEMY_SPEED;
+					m_fVY = dirVY * ENEMY_SPEED;
+					m_fAngle += ROTATION_SPEED;
+				}
+			}
+			else {	//	プレイヤーは進行方向左側
+				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+					m_fVX = vx * l;
+					m_fVY = vy * l;
+					m_fAngle = atan2(m_fVY, m_fVX);
+					m_fVX *= ENEMY_SPEED;
+					m_fVY *= ENEMY_SPEED;
+				}
+				else {
+					m_fVX = dirVX * ENEMY_SPEED;
+					m_fVY = dirVY * ENEMY_SPEED;
+					m_fAngle -= ROTATION_SPEED;
+				}
+			}
+		}
+		break;
+	}
+
+	
+	m_fX += m_fVX;
+	m_fY += m_fVY;
+
 	if (m_fAngle > 2.f * PI) {
 		m_fAngle -= 2.f * PI;
 	}
-
-	m_fVX = ENEMY_SPEED * cosf(m_fAngle);
-	m_fVY = ENEMY_SPEED * sinf(m_fAngle);
-
-	m_fX += m_fVX;
-	m_fY += m_fVY;
+	else if (m_fAngle < -2.f * PI) {
+		m_fAngle += 2.f * PI;
+	}
 
 
 	//	フィールド範囲から出ないように調整
@@ -170,7 +265,7 @@ bool CEnemy::collide(float x, float y, float r) {
 *@param [in] pObj	相手オブジェクト
 */
 bool CEnemy::collide(IGameObject *pObj) {
-	float x = m_fX, y = m_fY, r = m_fRad;
+	float x = m_fX, y = m_fY, r = m_fCoreRad;
 
 	return pObj->collide(x, y, r);
 }

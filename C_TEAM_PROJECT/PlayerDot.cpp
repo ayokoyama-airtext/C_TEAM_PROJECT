@@ -115,7 +115,7 @@ bool CPlayerDot::collide(IGameObject *pObj) {
 *@brief	ƒ_ƒ[ƒW‚ğó‚¯‚½‚Æ‚«‚Ìˆ—
 */
 void CPlayerDot::damage(float amount) {
-
+	m_iState = 0;
 }
 
 
