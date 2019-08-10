@@ -32,7 +32,9 @@ protected:
 	ID2D1Bitmap	*m_pImage;
 	ID2D1SolidColorBrush	*m_pBlack;
 	bool	m_bFlag;
-	INT		m_iTimer;
+	INT		m_iTimer = 0;
 	INT		m_iFadeTimer;
+	INT		mFrame;
+	static const int ANIM_FRAME=60;
 };
 
