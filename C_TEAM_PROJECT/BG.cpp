@@ -1,3 +1,8 @@
+/**
+*@file		BG.cpp
+*@author	A.Yokoyama
+*@brief		BGƒNƒ‰ƒX‚ÌŽÀ‘•
+*/
 #include "stdafx.h"
 #include <d2d1.h>
 #include "Stage.h"

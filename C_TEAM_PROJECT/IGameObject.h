@@ -6,18 +6,14 @@
 #pragma once
 #define __IGAMEOBJECT_H__
 
+//	前方宣言
 struct ID2D1RenderTarget;
+//namespace std
+//{
+//	template <class T> class allocator;
+//	template<class T, class _Alloc = allocator<T>> class vector;
+//}
 
-typedef struct {
-	FLOAT fx;
-	FLOAT fy;
-	FLOAT fVX;
-	FLOAT fVY;
-	FLOAT rad;
-	FLOAT angle;	//	ワールド座標基準
-	FLOAT scale;
-	INT coreHP;
-}	GAMEOBJECT_STATS;
 
 class IGameObject
 {

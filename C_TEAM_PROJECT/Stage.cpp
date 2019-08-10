@@ -3,7 +3,9 @@
 #include <list>
 #include "Stage.h"
 #include "Player.h"
+#include "PlayerDot.h"
 #include "BG.h"
+#include "EnemyManager.h"
 #include "TextureLoader.h"
 
 
@@ -16,21 +18,61 @@ CStage::CStage(CSelector *pSystem)
 	m_pSystem = pSystem;
 	m_iGameFinishState = 0;
 	m_ePhase = STAGE_INIT;
-	m_pPlayer = new CPlayer(this);
-	m_pBG = new CBG(this);
+
+	ID2D1RenderTarget *pTarget = pSystem->GetRenderTarget();
+
+	if (pTarget) {
+
+		CPlayerDot::Restore(pTarget, this);
+		m_pPlayerDots = new std::list<IGameObject*>();
+
+		m_pPlayer = new CPlayer(this);
+		m_pBG = new CBG(this);
+
+		m_pEnemyManager = new CEnemyManager(this);
+		m_pEnemyManager->Restore(pTarget);
+		m_pEnemies = new std::list<IGameObject*>();
 
 #ifdef _DEBUG
-	m_pBrush = NULL;
-	ID2D1RenderTarget *pTarget = pSystem->GetRenderTarget();
-	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
-	SAFE_RELEASE(pTarget);
+		m_pBrush = NULL;
+		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
 #endif // _DEBUG
+
+		SAFE_RELEASE(pTarget);
+	}
 
 }
 
 
 CStage::~CStage()
 {
+
+	//	全敵キャラの削除
+	if (m_pEnemies) {
+		std::list<IGameObject*>::iterator it = m_pEnemies->begin();
+		while (it != m_pEnemies->end()) {
+			SAFE_DELETE(*it);
+			it = m_pEnemies->erase(it);
+		}
+		delete m_pEnemies;
+	}
+	m_pEnemyManager->Finalize();
+	SAFE_DELETE(m_pEnemyManager);    //!< 敵セットシステムの削除
+
+
+	//	全PlayerDotの削除
+	if (m_pPlayerDots) {
+		std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
+		while (it != m_pPlayerDots->end()) {
+			SAFE_DELETE(*it);
+			it = m_pPlayerDots->erase(it);
+		}
+		delete m_pPlayerDots;
+		m_pPlayerDots = NULL;
+	}
+	CPlayerDot::Finalize();
+
+
 	SAFE_DELETE(m_pBG);
 	SAFE_DELETE(m_pPlayer);
 
@@ -52,12 +94,39 @@ GameSceneResultCode CStage::move() {
 
 	case STAGE_RUN:
 
-		if (m_pPlayer)
+		if (m_pPlayer) {
 			m_pPlayer->move();
-
-
-		if (m_pPlayer)
 			m_pPlayer->CalcDrawCoord(&playerCoords);
+		}
+
+		//  PlayerDotの処理
+		if (m_pPlayerDots) {
+			std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
+			int i = 0;
+			while ( (i < playerCoords.playerMaxDotNum) && (it != m_pPlayerDots->end()) ) {
+				(*it++)->move();
+				++i;
+			}
+		}
+
+		//	エネミーのリスポーンとmove
+		if (m_pEnemyManager && m_pEnemies) {
+			//	リスポーン
+			IGameObject *pObj = NULL;
+			do {
+				pObj = m_pEnemyManager->CreateEnemy();
+				if (pObj != NULL)
+					m_pEnemies->push_back(pObj);
+			} while (pObj);
+
+			//	moveさせる
+			std::list<IGameObject*>::iterator it = m_pEnemies->begin();
+			while (it != m_pEnemies->end()) {
+				(*it++)->move();
+			}
+		}
+
+
 
 		break;
 
@@ -83,8 +152,25 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 	if (m_pBG)
 		m_pBG->draw(pRenderTarget);
 
+	if (m_pEnemies) {
+		std::list<IGameObject*>::iterator it = m_pEnemies->begin();
+		while (it != m_pEnemies->end()) {
+			(*it++)->draw(pRenderTarget);
+		}
+	}
+
 	if (m_pPlayer)
 		m_pPlayer->draw(pRenderTarget);
+
+	//  PlayerDotの処理
+	if (m_pPlayerDots) {
+		std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
+		int i = 0;
+		while ((i < playerCoords.playerMaxDotNum) && (it != m_pPlayerDots->end())) {
+			(*it++)->draw(pRenderTarget);
+			++i;
+		}
+	}
 
 #ifdef _DEBUG
 	if (m_pBrush) {
@@ -116,6 +202,19 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 #endif // _DEBUG
 
 }
+
+
+/***********************************************
+*@method
+*    生成されたPlayerDotをリンクリストに登録する
+*@param in pObj  新しいPlayerDotのオブジェクト
+************************************************/
+void CStage::AddPlayerDot(IGameObject *pObj) {
+	if (m_pPlayerDots) {
+		m_pPlayerDots->push_back(pObj);
+	}
+}
+
 
 /**
 * @brief ID2D1RenderTarget を取得して返す

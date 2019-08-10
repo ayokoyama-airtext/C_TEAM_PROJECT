@@ -1,37 +1,32 @@
 /**
-*@file		Player.h
+*@file		Enemy.h
 *@author	A.Yokoyama
-*@date		07.August.2019
-*@brief		プレイヤークラスの宣言
-*@note		Stage.h の後に#include すること
+*@date		10.August.2019
+*@brief		エネミークラスの宣言
 */
 #pragma once
 #include "IGameObject.h"
 
-class CStage;
 struct ID2D1Bitmap;
 struct ID2D1SolidColorBrush;
+class CStage;
 
-class CPlayer :
+class CEnemy :
 	public IGameObject
 {
 public:
-	CPlayer(CStage *pStage);
-	virtual ~CPlayer();
+	CEnemy(float x, float y, float scale);
+	virtual ~CEnemy();
 	virtual bool move() override;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
-	void CalcDrawCoord(PLAYER_COORDS *playerCoords);
-
 	virtual bool collide(float x, float y, float r) override;
-	virtual bool collide(IGameObject *pObj);
+	virtual bool collide(IGameObject *pObj) override;
 	virtual void damage(float amount) override;
+
+	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage);
+	static void Finalize();
 protected:
-	CStage	*m_pParent;
-	ID2D1Bitmap	*m_pImage;
-	
-	INT		m_iTimer;
-	FLOAT	m_fDrawX;		//	x座標(描画上の)
-	FLOAT	m_fDrawY;		//	y座標(描画上の)
+
 	FLOAT	m_fX;			//	x座標(データ上の)
 	FLOAT	m_fY;			//	y座標(データ上の)
 	FLOAT	m_fVX;			//	x方向加速度
@@ -44,31 +39,24 @@ protected:
 
 	bool	m_bDamaged;
 
-	//	フィールド幅高
-	FLOAT m_fFieldWidth;
-	FLOAT m_fFieldHeight;
-	
+
 
 	//	定数
-	static const int PLAYER_START_X = 960;
-	static const int PLAYER_START_Y = 540;
 	static const int BELT_RAD = 96;		//	ベルト半径
 	static const int DOT_RAD = 24;			//	ドット半径
 	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ
 	static const float ROTATION_SPEED;		//	回転速度
-	static const float PLAYER_SPEED;		//	移動速度
+	static const float ENEMY_SPEED;		//	移動速度
 
-	//	デバッグ用
+
+	//	静的メンバ(初期化を忘れずに)
+	static CStage			*m_pParent;
+	static ID2D1Bitmap		*m_pImage;
+	static FLOAT m_fFieldWidth;
+	static FLOAT m_fFieldHeight;
 #ifdef _DEBUG
-	ID2D1SolidColorBrush	*m_pBrush;
-	ID2D1SolidColorBrush	*m_pRedBrush;
-
-	//	デバッグ用定数
-	static const int INC_MAXDOT_KEY = 0x46;	//	Fキー
-	bool	INC_MAXDOT_FLAG = true;
-	static const int DEC_MAXDOT_KEY = 0x47;	//	Gキー
-#endif
+	static ID2D1SolidColorBrush	*m_pBrush;
+	static ID2D1SolidColorBrush	*m_pRedBrush;
+#endif // _DEBUG
 };
-
-
 

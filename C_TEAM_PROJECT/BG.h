@@ -1,3 +1,9 @@
+/**
+*@file		BG.h
+*@author	A.Yokoyama
+*@date		07.August.2019
+*@brief		BGƒNƒ‰ƒX‚ÌéŒ¾
+*/
 #pragma once
 
 #ifndef __IGAMEOBJECT_H__
