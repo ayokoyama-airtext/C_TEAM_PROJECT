@@ -50,6 +50,16 @@ CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 			L"",
 			&m_pTextFormat
 		);
+		hr = pFactory->CreateTextFormat(
+			_T("consolas"),
+			NULL,
+			DWRITE_FONT_WEIGHT_NORMAL,
+			DWRITE_FONT_STYLE_NORMAL,
+			DWRITE_FONT_STRETCH_NORMAL,
+			60,
+			L"",
+			&m_pTextFormat2
+		);
 
 		SAFE_RELEASE(pFactory);
 	}
@@ -81,6 +91,7 @@ CSelector::~CSelector()
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pRedBrush);
 	SAFE_RELEASE(m_pWhiteBrush);
+	SAFE_RELEASE(m_pTextFormat2);
 	SAFE_RELEASE(m_pTextFormat);
 #endif
 }
@@ -91,11 +102,24 @@ CSelector::~CSelector()
 */
 void CSelector::doAnim() {
 	GameSceneResultCode rc = GAMESCENE_DEFAULT;
+	int move = -1;
 
 	switch (m_eGamePhase) {
 	case GAMEPHASE_INIT:
-		m_eGamePhase = GAMEPHASE_RESET;
+		if (GetAsyncKeyState(VK_RETURN)) {
+			m_eGamePhase = GAMEPHASE_GAME;
+			m_pScene = new CStage(this);
+			break;
+		}
 
+		if (GetAsyncKeyState(VK_SPACE)) {
+			move = 1;
+		}
+
+		if (move < 0)
+			break;
+
+		m_eGamePhase = GAMEPHASE_RESET;
 
 #ifdef hikegami
 		m_eGamePhase = GAMEPHASE_TITLE;
@@ -213,6 +237,19 @@ void CSelector::doDraw(ID2D1RenderTarget *pRenderTarget) {
 	rc.top = 32.f;
 
 	switch (m_eGamePhase) {
+	case GAMEPHASE_INIT:
+		rc.left = (size.width - 1200.f) * 0.5f;
+		rc.right = rc.left + 1200.f;
+		rc.top = size.height * 0.5f;
+		rc.bottom = size.height;
+		_stprintf_s(str, _countof(str), _T("Press 'Space' : ’S“–‰ÓŠ‚ÖˆÚ“®"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat2, &rc, m_pRedBrush);
+
+		rc.top += 120.f;
+		_stprintf_s(str, _countof(str), _T("Press 'Enter' : ƒQ[ƒ€–{•Ò‚ÖˆÚ“®"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat2, &rc, m_pRedBrush);
+		break;
+
 	case GAMEPHASE_TITLE:
 		_stprintf_s(str, _countof(str), _T("GAMESCENE:TITLE"));
 		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat, &rc, m_pRedBrush);

@@ -6,14 +6,14 @@
 #pragma once
 #define __IGAMEOBJECT_H__
 
+//	‘O•ûéŒ¾
 struct ID2D1RenderTarget;
+//namespace std
+//{
+//	template <class T> class allocator;
+//	template<class T, class _Alloc = allocator<T>> class vector;
+//}
 
-typedef struct {
-	float fx;
-	float fy;
-	float rad;
-	float angle;
-}	CIRCLE_ELEMENTS;
 
 class IGameObject
 {
@@ -29,8 +29,6 @@ public:
 		return false;
 	}
 	virtual void damage(float amount) {};
-protected:
-	CIRCLE_ELEMENTS circle;
 };
 
 

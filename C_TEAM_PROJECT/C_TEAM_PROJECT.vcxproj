@@ -147,13 +147,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BG.h" />
     <ClInclude Include="C_TEAM_PROJECT.h" />
     <ClInclude Include="ddsfunctions.h" />
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Explain.h" />
     <ClInclude Include="GameOver.h" />
     <ClInclude Include="IGameObject.h" />
     <ClInclude Include="IGameScene.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerDot.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="Selector.h" />
@@ -166,13 +170,17 @@
     <ClInclude Include="Title.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BG.cpp" />
     <ClCompile Include="C_TEAM_PROJECT.cpp" />
     <ClCompile Include="ddsfunctions.cpp" />
+    <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Explain.cpp" />
     <ClCompile Include="GameOver.cpp" />
     <ClCompile Include="IGameObject.cpp" />
     <ClCompile Include="IGameScene.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PlayerDot.cpp" />
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Stage.cpp" />

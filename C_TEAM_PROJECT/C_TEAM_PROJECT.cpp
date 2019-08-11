@@ -37,7 +37,7 @@ ID2D1HwndRenderTarget	*g_pRenderTarget = NULL;	//	描画ターゲット
 double		g_dblDenominator;
 double		g_dblFrame;
 __int64		g_i64OldTimer;
-#define FPS 30
+#define FPS 60.0
 #define INTERVAL (1.0/FPS)
 
 CSelector	*g_pSelector = NULL;	//	ゲームシステムオブジェクト
@@ -157,6 +157,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	//	ゲームシステム初期化
 	g_pSelector = new CSelector(g_pRenderTarget);
+
+	InvalidateRect(hWnd, NULL, false);
 
 
 	/**************************
