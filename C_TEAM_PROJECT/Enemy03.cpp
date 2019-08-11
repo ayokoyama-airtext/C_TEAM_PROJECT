@@ -82,7 +82,6 @@ bool CEnemy03::move() {
 			m_pDots.pop_back();
 			m_iDotNum--;
 		}
-		++i;
 	}
 
 
