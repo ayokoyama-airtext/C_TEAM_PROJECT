@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ENEMY">
+      <UniqueIdentifier>{ceb5f337-de82-47a2-8e4c-584d98cc5596}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -72,10 +75,31 @@
     <ClInclude Include="PlayerDot.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Enemy.h">
+    <ClInclude Include="EnemyManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="EnemyManager.h">
+    <ClInclude Include="EnemyDot.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy02.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy03.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy04.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy05.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy06.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -131,10 +155,31 @@
     <ClCompile Include="PlayerDot.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Enemy.cpp">
+    <ClCompile Include="EnemyManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="EnemyManager.cpp">
+    <ClCompile Include="EnemyDot.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy02.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy03.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy04.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy05.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy06.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

@@ -43,6 +43,7 @@ typedef struct {
 class CPlayer;
 class CBG;
 class CEnemyManager;
+class CUI;
 struct ID2D1SolidColorBrush;
 
 
@@ -53,7 +54,13 @@ public:
 	virtual ~CStage(void);
 	virtual GameSceneResultCode move() override;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
+
 	virtual void AddPlayerDot(IGameObject *pObj);
+	virtual void AddEnemyDot(IGameObject *pObj);
+
+	virtual int GetScore();
+	virtual int GetTimer();
+
 	ID2D1RenderTarget *GetRenderTarget();
 
 	//	公開メンバ変数
@@ -67,11 +74,15 @@ protected:
 	CPlayer			*m_pPlayer;
 	CBG				*m_pBG;
 	CEnemyManager	*m_pEnemyManager;
+	CUI				*m_pUI;
 	STAGE_PHASE		m_ePhase;
 
 	std::list<IGameObject*>		*m_pPlayerDots;
 	std::list<IGameObject*>		*m_pEnemies;
+	std::list<IGameObject*>		*m_pEnemyDots;
 
+	UINT		m_iScore;
+	UINT		m_iTimer;	//	時間制限用
 	UINT		m_iGameFinishState;
 	//	m_iGameFinishState 用定数
 	static const int GAME_CLEAR = 0x02;

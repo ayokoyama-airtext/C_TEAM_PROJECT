@@ -151,6 +151,12 @@
     <ClInclude Include="C_TEAM_PROJECT.h" />
     <ClInclude Include="ddsfunctions.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Enemy02.h" />
+    <ClInclude Include="Enemy03.h" />
+    <ClInclude Include="Enemy04.h" />
+    <ClInclude Include="Enemy05.h" />
+    <ClInclude Include="Enemy06.h" />
+    <ClInclude Include="EnemyDot.h" />
     <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Explain.h" />
     <ClInclude Include="GameOver.h" />
@@ -168,12 +174,19 @@
     <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="tgafunctions.h" />
     <ClInclude Include="Title.h" />
+    <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BG.cpp" />
     <ClCompile Include="C_TEAM_PROJECT.cpp" />
     <ClCompile Include="ddsfunctions.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="Enemy02.cpp" />
+    <ClCompile Include="Enemy03.cpp" />
+    <ClCompile Include="Enemy04.cpp" />
+    <ClCompile Include="Enemy05.cpp" />
+    <ClCompile Include="Enemy06.cpp" />
+    <ClCompile Include="EnemyDot.cpp" />
     <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Explain.cpp" />
     <ClCompile Include="GameOver.cpp" />
@@ -194,6 +207,7 @@
     <ClCompile Include="TextureLoader.cpp" />
     <ClCompile Include="tgafunctions.cpp" />
     <ClCompile Include="Title.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="C_TEAM_PROJECT.rc" />

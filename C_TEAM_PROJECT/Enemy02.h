@@ -1,8 +1,8 @@
 /**
-*@file		Enemy.h
-*@author	A.Yokoyama
-*@date		10.August.2019
-*@brief		エネミークラスの宣言
+*@file		Enemy02.h
+*@author	
+*@date		11.August.2019
+*@brief		エネミー02クラスの宣言
 */
 #pragma once
 #include "IGameObject.h"
@@ -14,12 +14,12 @@ class CStage;
 class CEnemyDot;
 
 
-class CEnemy :
+class CEnemy02 :
 	public IGameObject
 {
 public:
-	CEnemy(float x, float y, float scale);
-	virtual ~CEnemy();
+	CEnemy02(float x, float y, float scale);
+	virtual ~CEnemy02();
 	virtual bool move() override;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
 	virtual bool collide(float x, float y, float r) override;

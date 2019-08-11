@@ -137,7 +137,8 @@ void CSelector::doAnim() {
 		m_eGamePhase = GAMEPHASE_GAME;
 		m_pScene = new CStage(this);
 #else
-		m_eGamePhase = GAMEPHASE_RESET;
+		m_eGamePhase = GAMEPHASE_GAME;
+		m_pScene = new CStage(this);
 #endif
 
 		break;

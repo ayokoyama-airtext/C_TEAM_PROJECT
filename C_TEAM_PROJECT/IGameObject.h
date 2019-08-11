@@ -8,11 +8,7 @@
 
 //	‘O•ûéŒ¾
 struct ID2D1RenderTarget;
-//namespace std
-//{
-//	template <class T> class allocator;
-//	template<class T, class _Alloc = allocator<T>> class vector;
-//}
+
 
 
 class IGameObject
@@ -29,6 +25,11 @@ public:
 		return false;
 	}
 	virtual void damage(float amount) {};
+
+	virtual float GetX() { return 0.f; }
+	virtual float GetY() { return 0.f; }
+	virtual float GetRad() { return 0.f; }
+	virtual float GetAngle() { return 0.f; }
 };
 
 

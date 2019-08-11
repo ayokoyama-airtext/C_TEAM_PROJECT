@@ -1,38 +1,38 @@
 /**
-*@file		Enemy.cpp
-*@author	A.Yokoyama
-*@brief		エネミークラスの実装
+*@file		Enemy04.cpp
+*@author
+*@brief		エネミー04クラスの実装
 */
 #include "stdafx.h"
 #include <d2d1.h>
 
 #include <cmath>
 #include "Stage.h"
-#include "Enemy.h"
+#include "Enemy04.h"
 #include "EnemyDot.h"
 #include "TextureLoader.h"
 
 
 #define ENEMY_FILE_NAME	_T("res\\enemy.png")
-const float CEnemy::ROTATION_SPEED = 0.025f;
-const float CEnemy::ENEMY_SPEED = 5.f;
-const float CEnemy::ENEMY_ESCAPE_SPEED = 8.f;
-const float CEnemy::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
-const float CEnemy::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
-const float CEnemy::SEARCH_ANGLE = cosf(PI * 0.5f);
+const float CEnemy04::ROTATION_SPEED = 0.025f;
+const float CEnemy04::ENEMY_SPEED = 5.f;
+const float CEnemy04::ENEMY_ESCAPE_SPEED = 8.f;
+const float CEnemy04::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
+const float CEnemy04::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
+const float CEnemy04::SEARCH_ANGLE = cosf(PI * 0.5f);
 
-float CEnemy::m_fFieldWidth = 0.f;
-float CEnemy::m_fFieldHeight = 0.f;
-ID2D1Bitmap *CEnemy::m_pImage = NULL;
-CStage *CEnemy::m_pParent = NULL;
+float CEnemy04::m_fFieldWidth = 0.f;
+float CEnemy04::m_fFieldHeight = 0.f;
+ID2D1Bitmap *CEnemy04::m_pImage = NULL;
+CStage *CEnemy04::m_pParent = NULL;
 #ifdef _DEBUG
-ID2D1SolidColorBrush *CEnemy::m_pBrush = NULL;
-ID2D1SolidColorBrush *CEnemy::m_pRedBrush = NULL;
+ID2D1SolidColorBrush *CEnemy04::m_pBrush = NULL;
+ID2D1SolidColorBrush *CEnemy04::m_pRedBrush = NULL;
 #endif // _DEBUG
 
 
 
-CEnemy::CEnemy(float x, float y, float scale)
+CEnemy04::CEnemy04(float x, float y, float scale)
 {
 	m_fX = x;
 	m_fY = y;
@@ -63,7 +63,7 @@ CEnemy::CEnemy(float x, float y, float scale)
 }
 
 
-CEnemy::~CEnemy()
+CEnemy04::~CEnemy04()
 {
 }
 
@@ -71,7 +71,7 @@ CEnemy::~CEnemy()
 /**
 *@brief	アニメーションメソッド
 */
-bool CEnemy::move() {
+bool CEnemy04::move() {
 	if (m_bDamaged)
 		return false;
 
@@ -118,25 +118,25 @@ bool CEnemy::move() {
 		break;
 
 	case EFLAG_SEARCH:	//	索敵
-		{
-			//	プレイヤーとの角度を計算
-			float l = sqrtf(vx * vx + vy * vy);
-			float cos = (dirVX * vx + dirVY * dirVY) / l;
-			if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
-				if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
-					m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
-					break;
-				}
+	{
+		//	プレイヤーとの角度を計算
+		float l = sqrtf(vx * vx + vy * vy);
+		float cos = (dirVX * vx + dirVY * dirVY) / l;
+		if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
+			if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
+				m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
+				break;
 			}
-
-			//	進行方向を変更
-			m_fAngle += ROTATION_SPEED;
-			//	進行方向へ加速
-			m_fVX = ENEMY_SPEED * dirVX;
-			m_fVY = ENEMY_SPEED * dirVY;
 		}
 
-		break;
+		//	進行方向を変更
+		m_fAngle += ROTATION_SPEED;
+		//	進行方向へ加速
+		m_fVX = ENEMY_SPEED * dirVX;
+		m_fVY = ENEMY_SPEED * dirVY;
+	}
+
+	break;
 
 	case EFLAG_CHASE:
 		m_iTimer++;
@@ -204,7 +204,7 @@ bool CEnemy::move() {
 
 	}
 
-	
+
 	m_fX += m_fVX;
 	m_fY += m_fVY;
 
@@ -237,7 +237,7 @@ bool CEnemy::move() {
 /**
 *@brief	描画メソッド
 */
-void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
+void CEnemy04::draw(ID2D1RenderTarget *pRenderTarget) {
 	float playerX = m_pParent->playerCoords.playerX;
 	float playerY = m_pParent->playerCoords.playerY;
 	float playerDrawX = m_pParent->playerCoords.playerDrawX;
@@ -247,7 +247,7 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 	float dy = playerDrawY + (m_fY - playerY);
 
 	D2D1_RECT_F rc, src;
-	
+
 
 #ifdef _DEBUG
 	//	ベルト
@@ -299,7 +299,7 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 *@param [in] r	対象の半径
 *@return	true 当たり / false 外れ
 */
-bool CEnemy::collide(float x, float y, float r) {
+bool CEnemy04::collide(float x, float y, float r) {
 	float vx = m_fX - x;
 	float vy = m_fY - y;
 	float l2 = vx * vx + vy * vy;
@@ -319,7 +319,7 @@ bool CEnemy::collide(float x, float y, float r) {
 *@param [in] pObj	相手オブジェクト
 *@return	true 当たり / false 外れ
 */
-bool CEnemy::collide(IGameObject *pObj) {
+bool CEnemy04::collide(IGameObject *pObj) {
 	if (m_iDamagedTimer > 0)
 		return false;
 
@@ -329,7 +329,7 @@ bool CEnemy::collide(IGameObject *pObj) {
 }
 
 
-void CEnemy::damage(float amount) {
+void CEnemy04::damage(float amount) {
 	if (m_iDotNum > 0) {
 		m_pDots[--m_iDotNum]->SetStateZero();
 		m_pDots.pop_back();
@@ -345,25 +345,25 @@ void CEnemy::damage(float amount) {
 /**
 *@brief	X座標を返す
 */
-float CEnemy::GetX() {
+float CEnemy04::GetX() {
 	return m_fX;
 }
 /**
 *@brief	Y座標を返す
 */
-float CEnemy::GetY() {
+float CEnemy04::GetY() {
 	return m_fY;
 }
 /**
 *@brief	Radを返す
 */
-float CEnemy::GetRad() {
+float CEnemy04::GetRad() {
 	return m_fRad;
 }
 /**
 *@brief	Angleを返す
 */
-float CEnemy::GetAngle() {
+float CEnemy04::GetAngle() {
 	return m_fAngle;
 }
 
@@ -371,7 +371,7 @@ float CEnemy::GetAngle() {
 /**
 *@brief	クラスで共有するリソースを生成する
 */
-void CEnemy::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
+void CEnemy04::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
 	SAFE_RELEASE(m_pImage);
 	//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, ENEMY_FILE_NAME, &m_pImage);
 	m_pParent = pStage;
@@ -390,7 +390,7 @@ void CEnemy::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
 /**
 *@brief	クラスで共有するリソースを破棄する
 */
-void CEnemy::Finalize() {
+void CEnemy04::Finalize() {
 	m_pParent = NULL;
 	SAFE_RELEASE(m_pImage);
 
