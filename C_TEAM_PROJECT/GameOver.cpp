@@ -10,6 +10,7 @@
 #include "TextureLoader.h"
 
 
+
 CGameOver::CGameOver(CSelector *pSystem)
 {
 	m_pSystem = pSystem;
@@ -21,7 +22,7 @@ CGameOver::CGameOver(CSelector *pSystem)
 	ID2D1RenderTarget *pTarget = NULL;
 	pTarget = m_pSystem->GetRenderTarget();
 	if (pTarget) {
-		//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\"), &m_pImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\gameover.tga"), &m_pImage);
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBlack);
 		pTarget->Release();
 		pTarget = NULL;
@@ -95,12 +96,12 @@ void CGameOver::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1_RECT_F rc;
 	D2D1_SIZE_F screenSize, textureSize;
 	screenSize = pRenderTarget->GetSize();
-	//textureSize = m_pImage->GetSize();
-	//rc.left  = (screenSize.width - textureSize.width) / 2;	//	センタリング
-	//rc.right = rc.left + textureSize.width;
-	//rc.top = (screenSize.height - textureSize.height) / 2;	//	センタリング
-	//rc.bottom = rc.top + textureSize.height;
-	//pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+	textureSize = m_pImage->GetSize();
+	rc.left  = (screenSize.width - textureSize.width) / 4;	//	センタリング
+	rc.right = rc.left + textureSize.width * 2.5;
+	rc.top = (screenSize.height - textureSize.height) / 4;	//	センタリング
+	rc.bottom = rc.top + textureSize.height * 2.5;
+	pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
 
 
 	switch (m_ePhase) {

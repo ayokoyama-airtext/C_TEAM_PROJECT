@@ -130,7 +130,7 @@ void CSelector::doAnim() {
 #elif tnakahara
 		m_eGamePhase = GAMEPHASE_EXPLAIN;
 		m_pScene = new CExplain(this);
-#elif sugita-tadayosi
+#elif stadayosi
 		m_eGamePhase = GAMEPHASE_GAMEOVER;
 		m_pScene = new CGameOver(this);
 #elif yakihiro || ayokoyama

@@ -43,7 +43,7 @@ IGameObject *CEnemyManager::CreateEnemy() {
 	pObj = new CEnemy06(1400.f, 1080.f, 1.f);
 #elif tnakahara
 	pObj = new CEnemy05(1400.f, 1080.f, 1.f);
-#elif sugita-tadayosi
+#elif stadayosi
 	pObj = new CEnemy04(1400.f, 1080.f, 1.f);
 #elif yakihiro || ayokoyama
 	pObj = new CEnemy(1400.f, 1080.f, 1.f);

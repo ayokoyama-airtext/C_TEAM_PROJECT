@@ -70,7 +70,7 @@ protected:
 	static const float ENEMY_ESCAPE_ANGLE;
 	static const float SEARCH_ANGLE;			//	õ“GŠp“x
 	static const int SEARCH_LENGTH = 1200;	//	õ“G‹——£
-	static const int ESCAPE_DURATION = 90;		//	“¦‘–ŠÔ
+	//static const int ESCAPE_DURATION = 90;		//	“¦‘–ŠÔ
 	static const int DAMAGED_DURATION = 30;		//	–³“GŠÔ
 
 

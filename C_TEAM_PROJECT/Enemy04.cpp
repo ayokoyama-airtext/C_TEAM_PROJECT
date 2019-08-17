@@ -109,7 +109,7 @@ bool CEnemy04::move() {
 		m_fVX = 0;
 		m_fVY = 0;
 		m_iTimer++;
-		if (m_iTimer < 120)
+		if (m_iTimer < 60)
 			break;
 
 		m_iBehaviorFlag = EFLAG_SEARCH;
@@ -123,7 +123,7 @@ bool CEnemy04::move() {
 		float cos = (dirVX * vx + dirVY * dirVY) / l;
 		if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
 			if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
-				m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
+				m_iBehaviorFlag = EFLAG_ESCAPE;	//	追跡へ移行
 				break;
 			}
 		}
@@ -137,7 +137,7 @@ bool CEnemy04::move() {
 
 	break;
 
-	case EFLAG_CHASE:
+/*	case EFLAG_CHASE:
 		m_iTimer++;
 		{
 			float l = 1.f / sqrtf(vx * vx + vy * vy);
@@ -173,16 +173,16 @@ bool CEnemy04::move() {
 			}
 		}
 		break;
-
+*/
 	case EFLAG_ESCAPE:	//	ダメージを受けると一定時間逃げる
 		if (m_iDamagedTimer > 0)
 			m_iDamagedTimer--;
-		if (m_iTimer++ > ESCAPE_DURATION) {
+/*		if (m_iTimer++ > ESCAPE_DURATION) {
 			m_iBehaviorFlag = EFLAG_SEARCH;
 			m_iTimer = 0;
 			break;
 		}
-
+*/
 		float l = 1.f / sqrtf(vx * vx + vy * vy);
 		float sin = (dirVX * vy - dirVY * vx);
 		float cos = (dirVX * vx + dirVY * vy) * l;
@@ -204,8 +204,8 @@ bool CEnemy04::move() {
 	}
 
 
-	m_fX += m_fVX;
-	m_fY += m_fVY;
+	m_fX += m_fVX * 1.1;
+	m_fY += m_fVY * 1.1;
 
 	if (m_fAngle > 2.f * PI) {
 		m_fAngle -= 2.f * PI;
