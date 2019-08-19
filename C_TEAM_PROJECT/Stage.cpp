@@ -115,6 +115,9 @@ GameSceneResultCode CStage::move() {
 
 	case STAGE_RUN:
 
+		if (m_pBG)
+			m_pBG->move();
+
 		if (m_pPlayer) {
 			m_pPlayer->move();
 			m_pPlayer->CalcDrawCoord(&playerCoords);

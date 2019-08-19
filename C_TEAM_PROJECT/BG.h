@@ -20,6 +20,7 @@ class CBG
 public:
 	CBG(CStage *pStage);
 	virtual ~CBG();
+	virtual bool move();
 	virtual void draw(ID2D1RenderTarget *pRenderTarget);
 protected:
 	CStage	*m_pParent;

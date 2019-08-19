@@ -33,6 +33,11 @@ CBG::~CBG()
 }
 
 
+bool CBG::move() {
+	return true;
+}
+
+
 void CBG::draw(ID2D1RenderTarget *pRenderTarget) {
 	//	Stage‚©‚ç”î•ñ‚ðŽæ“¾
 	float playerX = m_pParent->playerCoords.playerX;
