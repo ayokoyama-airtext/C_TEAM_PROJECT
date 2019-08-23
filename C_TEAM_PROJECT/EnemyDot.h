@@ -23,8 +23,11 @@ public:
 	virtual bool collide(IGameObject *pObj) override;
 	virtual void damage(float amount) override;
 
+	virtual int GetNumber() override;
+
 	virtual bool IsDead();
 	virtual void SetStateZero();
+	virtual int GetState() override;
 
 	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage);
 	static void Finalize();

@@ -7,6 +7,7 @@
 #include "BG.h"
 #include "EnemyManager.h"
 #include "EnemyDot.h"
+#include "Shot.h"
 #include "UI.h"
 #include "TextureLoader.h"
 
@@ -26,11 +27,12 @@ CStage::CStage(CSelector *pSystem)
 
 	if (pTarget) {
 
-		CPlayerDot::Restore(pTarget, this);
-		m_pPlayerDots = new std::list<IGameObject*>();
+		m_pPlayerDots = new std::list<IGameObject*>();	//!< playerより先に作ること！
 
 		m_pPlayer = new CPlayer(this);
 		m_pBG = new CBG(this);
+
+		CPlayerDot::Restore(pTarget, this, m_pPlayer);	//!< playerの後でRestoreすること!
 
 		m_pEnemyManager = new CEnemyManager(this);
 		m_pEnemyManager->Restore(pTarget);
@@ -38,6 +40,9 @@ CStage::CStage(CSelector *pSystem)
 
 		CEnemyDot::Restore(pTarget, this);
 		m_pEnemyDots = new std::list<IGameObject*>();
+
+		CShot::Restore(this, m_pPlayer, pTarget);
+		m_pShots = new std::list<IGameObject*>();
 
 		m_pUI = new CUI(this);
 
@@ -54,17 +59,16 @@ CStage::CStage(CSelector *pSystem)
 
 CStage::~CStage()
 {
-
-	//	全エネミードットの削除
-	if (m_pEnemyDots) {
-		std::list<IGameObject*>::iterator it = m_pEnemyDots->begin();
-		while (it != m_pEnemyDots->end()) {
+	//	全shotの削除
+	if (m_pShots) {
+		std::list<IGameObject*>::iterator it = m_pShots->begin();
+		while (it != m_pShots->end()) {
 			delete (*it);
-			it = m_pEnemyDots->erase(it);
+			it = m_pShots->erase(it);
 		}
-		SAFE_DELETE(m_pEnemyDots);
+		SAFE_DELETE(m_pShots);
 	}
-	CEnemyDot::Finalize();
+	CShot::Finalize();
 
 	//	全敵キャラの削除
 	if (m_pEnemies) {
@@ -77,6 +81,18 @@ CStage::~CStage()
 	}
 	m_pEnemyManager->Finalize();
 	SAFE_DELETE(m_pEnemyManager);    //!< 敵セットシステムの削除
+
+	//	全エネミードットの削除
+	if (m_pEnemyDots) {
+		std::list<IGameObject*>::iterator it = m_pEnemyDots->begin();
+		while (it != m_pEnemyDots->end()) {
+			delete (*it);
+			it = m_pEnemyDots->erase(it);
+		}
+		SAFE_DELETE(m_pEnemyDots);
+	}
+	CEnemyDot::Finalize();
+
 
 
 	//	全PlayerDotの削除
@@ -122,7 +138,7 @@ GameSceneResultCode CStage::move() {
 			m_pPlayer->move();
 			m_pPlayer->CalcDrawCoord(&playerCoords);
 		}
-
+		
 		//  PlayerDotの処理
 		if (m_pPlayerDots) {
 			std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
@@ -173,22 +189,37 @@ GameSceneResultCode CStage::move() {
 			}
 		}
 
+		//	Shotの処理
+		if (m_pShots) {
+			std::list<IGameObject*>::iterator it = m_pShots->begin();
+			while (it != m_pShots->end()) {
+				if ((*it)->move()) {
+					++it;
+				}
+				else {
+					SAFE_DELETE(*it);
+					it = m_pShots->erase(it);
+				}
+			}
+		}
+
 		//********************************
 		//		当たり判定	
 		//********************************
 
 		//	PlayerDotとエネミー
-		if (m_pPlayerDots && m_pEnemies) {
+		if (m_pPlayerDots && m_pEnemies && playerCoords.playerIsWHmode == false) {
 			std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
+			std::list<IGameObject*>::iterator it2;
 			int i = 0;
 			while ((i < playerCoords.playerMaxDotNum) && (it != m_pPlayerDots->end())) {
-				std::list<IGameObject*>::iterator it2 = m_pEnemies->begin();
-				while (it2 != m_pEnemies->end()) {
-					if ( (*it2)->collide((*it)) ) {
-						(*it2)->damage(1.0f);
+					it2 = m_pEnemies->begin();
+					while (it2 != m_pEnemies->end()) {
+						if ( (*it2)->collide((*it)) ) {
+							(*it2)->damage(1.0f);
+						}
+						++it2;
 					}
-					++it2;
-				}
 				++it;
 				++i;
 			}
@@ -202,12 +233,57 @@ GameSceneResultCode CStage::move() {
 				std::list<IGameObject*>::iterator it2 = m_pEnemyDots->begin();
 				while (it2 != m_pEnemyDots->end()) {
 					if ((*it2)->collide((*it))) {
-						(*it2)->damage(1.0f);
+						if (playerCoords.playerIsWHmode == false) {
+							(*it2)->damage(1.0f);
+						}
+						else {
+							(*it)->damage(1.0f);
+						}
 					}
 					++it2;
 				}
 				++it;
 				++i;
+			}
+		}
+
+		//	EnemyDot(先頭についてるのだけ)とプレイヤー&プレイヤードット
+		if (m_pPlayerDots && m_pEnemyDots) {
+			std::list<IGameObject*>::iterator eIt = m_pEnemyDots->begin();
+			std::list<IGameObject*>::iterator pIt;
+			while (eIt != m_pEnemyDots->end()) {
+				if (0 == (*eIt)->GetNumber()) {
+					if ((*eIt)->collide(m_pPlayer)) {
+						m_pPlayer->damage(1.0f);
+					}
+					pIt = m_pPlayerDots->begin();
+					while (pIt != m_pPlayerDots->end()) {
+						if ((*eIt)->collide(*pIt)) {
+							(*pIt)->damage(1.f);
+						}
+						++pIt;
+					}
+				}
+				++eIt;
+			}	//	--while終わり--
+		}
+
+		//	Shot と　エネミードット
+		if (m_pShots && m_pEnemyDots) {
+			std::list<IGameObject*>::iterator sIt = m_pShots->begin();
+			std::list<IGameObject*>::iterator eIt;
+			while (sIt != m_pShots->end()) {
+				eIt = m_pEnemyDots->begin();
+				bool IsHit = false;
+				while (eIt != m_pEnemyDots->end() && IsHit == false) {
+					if ((*sIt)->collide(*eIt)) {
+						(*eIt)->damage(1.f);
+						(*sIt)->damage(1.f);
+						IsHit = true;
+					}
+					eIt++;
+				}
+				sIt++;
 			}
 		}
 
@@ -266,6 +342,13 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 		}
 	}
 
+	if (m_pShots) {
+		std::list<IGameObject*>::iterator it = m_pShots->begin();
+		while (it != m_pShots->end()) {
+			(*it++)->draw(pRenderTarget);
+		}
+	}
+
 	if (m_pUI)
 		m_pUI->draw(pRenderTarget);
 
@@ -320,6 +403,17 @@ void CStage::AddPlayerDot(IGameObject *pObj) {
 void CStage::AddEnemyDot(IGameObject *pObj) {
 	if (m_pEnemyDots) {
 		m_pEnemyDots->push_back(pObj);
+	}
+}
+
+/***********************************************
+*@method
+*    生成されたEnemyDotをリンクリストに登録する
+*@param in pObj  新しいEnemyDotのオブジェクト
+************************************************/
+void CStage::AddShot(IGameObject *pObj) {
+	if (m_pShots) {
+		m_pShots->push_back(pObj);
 	}
 }
 

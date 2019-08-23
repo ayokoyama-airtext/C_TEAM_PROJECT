@@ -30,6 +30,8 @@ public:
 	virtual float GetY() { return 0.f; }
 	virtual float GetRad() { return 0.f; }
 	virtual float GetAngle() { return 0.f; }
+	virtual int GetNumber() { return -1; }
+	virtual int GetState() { return -1; }
 };
 
 

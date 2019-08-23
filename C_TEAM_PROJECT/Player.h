@@ -7,10 +7,12 @@
 */
 #pragma once
 #include "IGameObject.h"
+#include <vector>
 
 class CStage;
 struct ID2D1Bitmap;
 struct ID2D1SolidColorBrush;
+class CPlayerDot;
 
 class CPlayer :
 	public IGameObject
@@ -21,6 +23,7 @@ public:
 	virtual bool move() override;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
 	void CalcDrawCoord(PLAYER_COORDS *playerCoords);
+	void DecreaseAliveDotNum();
 
 	virtual bool collide(float x, float y, float r) override;
 	virtual bool collide(IGameObject *pObj);
@@ -30,6 +33,8 @@ protected:
 	ID2D1Bitmap	*m_pImage;
 	
 	INT		m_iTimer;
+	INT		m_iDamagedTimer;
+	INT		m_iShotTimer;
 	FLOAT	m_fDrawX;		//	x座標(描画上の)
 	FLOAT	m_fDrawY;		//	y座標(描画上の)
 	FLOAT	m_fX;			//	x座標(データ上の)
@@ -43,7 +48,13 @@ protected:
 	INT		m_iDotNum;		//	生きてるドットの数
 	INT		m_iMaxDotNum;	//	ドットの最大個数(成長するとこれが増える)(最大8?)
 
+	std::vector<CPlayerDot*>	m_pDots;
+
 	bool	m_bDamaged;
+	bool	m_bIsWhiteHallMode;	//	true:WH / false:BH
+
+	//	連打防止フラグ
+	bool	m_bIsRkeyPress;
 
 	//	フィールド幅高
 	FLOAT m_fFieldWidth;
@@ -53,11 +64,15 @@ protected:
 	//	定数
 	static const int PLAYER_START_X = 960;
 	static const int PLAYER_START_Y = 540;
+	static const int START_DOT_NUM = 5;
+	static const int START_MAX_DOT_NUM = 5;
 	static const int BELT_RAD = 96;		//	ベルト半径
 	static const int DOT_RAD = 24;			//	ドット半径
 	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ
 	static const float ROTATION_SPEED;		//	回転速度
 	static const float PLAYER_SPEED;		//	移動速度
+	static const int DAMAGED_DURATION = 90;	//	無敵時間
+	static const int SHOT_INTERVAL = 120;	//	弾の発射間隔
 
 	//	デバッグ用
 #ifdef _DEBUG
@@ -71,5 +86,6 @@ protected:
 #endif
 };
 
+#define RKEY_CODE 0x52
 
 

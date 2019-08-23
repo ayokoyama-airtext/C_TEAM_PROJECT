@@ -37,6 +37,7 @@ typedef struct {
 	INT		playerMaxDotNum;
 	DRAW_SITUATION	XaxisDraw;
 	DRAW_SITUATION	YaxisDraw;
+	bool	playerIsWHmode;
 }	PLAYER_COORDS;
 
 
@@ -57,6 +58,7 @@ public:
 
 	virtual void AddPlayerDot(IGameObject *pObj);
 	virtual void AddEnemyDot(IGameObject *pObj);
+	virtual void AddShot(IGameObject *pObj);
 
 	virtual int GetScore();
 	virtual int GetTimer();
@@ -80,6 +82,7 @@ protected:
 	std::list<IGameObject*>		*m_pPlayerDots;
 	std::list<IGameObject*>		*m_pEnemies;
 	std::list<IGameObject*>		*m_pEnemyDots;
+	std::list<IGameObject*>		*m_pShots;
 
 	UINT		m_iScore;
 	UINT		m_iTimer;	//	éûä‘êßå¿óp

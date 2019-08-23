@@ -118,6 +118,13 @@ void CEnemyDot::damage(float amount) {
 }
 
 /**
+*@brief	ドットの番号を返す
+*/
+int CEnemyDot::GetNumber() {
+	return m_iNumber;
+}
+
+/**
 *@brief	m_bDamagedの値を返す
 *@return true 死亡 / false 生存
 */
@@ -130,6 +137,10 @@ bool CEnemyDot::IsDead() {
 */
 void CEnemyDot::SetStateZero() {
 	m_iState = 0;
+}
+
+int CEnemyDot::GetState() {
+	return m_iState;
 }
 
 

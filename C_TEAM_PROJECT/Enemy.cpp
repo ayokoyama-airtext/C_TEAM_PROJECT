@@ -72,8 +72,14 @@ CEnemy::~CEnemy()
 *@brief	アニメーションメソッド
 */
 bool CEnemy::move() {
-	if (m_bDamaged)
+	if (m_bDamaged) {
+		if (m_iDotNum > 0) {
+			for (int i = 0; i < m_iDotNum; ++i) {
+				m_pDots[i]->SetStateZero();
+			}
+		}
 		return false;
+	}
 
 	for (int i = 0; i < m_iDotNum; ++i) {
 		if (m_pDots[i]->IsDead()) {
@@ -299,6 +305,9 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 *@return	true 当たり / false 外れ
 */
 bool CEnemy::collide(float x, float y, float r) {
+	if (m_iDamagedTimer > 0)
+		return false;
+
 	float vx = m_fX - x;
 	float vy = m_fY - y;
 	float l2 = vx * vx + vy * vy;

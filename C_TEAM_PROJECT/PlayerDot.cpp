@@ -18,8 +18,10 @@
 ID2D1Bitmap *CPlayerDot::m_pImage = NULL;
 int	CPlayerDot::m_iCount = 0;
 CStage *CPlayerDot::m_pParent = NULL;
+CPlayer *CPlayerDot::m_pPlayer = NULL;
 #ifdef _DEBUG
-ID2D1SolidColorBrush *CPlayerDot::m_pBrush = NULL;
+ID2D1SolidColorBrush *CPlayerDot::m_pBrushBlack = NULL;
+ID2D1SolidColorBrush *CPlayerDot::m_pBrushWhite = NULL;
 #endif // _DEBUG
 
 
@@ -62,6 +64,7 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	float playerDrawY = m_pParent->playerCoords.playerDrawY;
 	float playerX = m_pParent->playerCoords.playerX;
 	float playerY = m_pParent->playerCoords.playerY;
+	bool  IsWHmode = m_pParent->playerCoords.playerIsWHmode;
 
 #ifdef _DEBUG
 	D2D1_ELLIPSE el;
@@ -69,7 +72,12 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	el.point.y = playerDrawY + (m_fY - playerY);
 	el.radiusX = m_fRad;
 	el.radiusY = m_fRad;
-	pRenderTarget->FillEllipse(el, m_pBrush);
+	if (IsWHmode) {
+		pRenderTarget->FillEllipse(el, m_pBrushWhite);
+	}
+	else {
+		pRenderTarget->FillEllipse(el, m_pBrushBlack);
+	}
 #endif // _DEBUG
 
 }
@@ -83,6 +91,9 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 *@return	true “–‚½‚è / false ŠO‚ê
 */
 bool CPlayerDot::collide(float x, float y, float r) {
+	if (!m_iState)
+		return false;
+
 	float vx = m_fX - x;
 	float vy = m_fY - y;
 	float l2 = vx * vx + vy * vy;
@@ -116,26 +127,46 @@ bool CPlayerDot::collide(IGameObject *pObj) {
 */
 void CPlayerDot::damage(float amount) {
 	m_iState = 0;
+	m_pPlayer->DecreaseAliveDotNum();
 }
 
+/**
+*@brief	state‚ð•Ô‚·
+*/
+int CPlayerDot::GetState() {
+	return m_iState;
+}
 
-void CPlayerDot::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
+float CPlayerDot::GetX() {
+	return m_fX;
+}
+
+float CPlayerDot::GetY() {
+	return m_fY;
+}
+
+void CPlayerDot::Restore(ID2D1RenderTarget *pTarget, CStage *pStage, CPlayer *pPlayer) {
 	SAFE_RELEASE(m_pImage);
 	//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_FILE_NAME, &m_pImage);
 	m_pParent = pStage;
+	m_pPlayer = pPlayer;
 
 #ifdef _DEBUG
-	SAFE_RELEASE(m_pBrush);
-	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
+	SAFE_RELEASE(m_pBrushBlack);
+	SAFE_RELEASE(m_pBrushWhite);
+	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrushWhite);
+	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBrushBlack);
 #endif // _DEBUG
 }
 
 void CPlayerDot::Finalize() {
+	m_pPlayer = NULL;
 	m_pParent = NULL;
 	SAFE_RELEASE(m_pImage);
 
 #ifdef _DEBUG
-	SAFE_RELEASE(m_pBrush);
+	SAFE_RELEASE(m_pBrushBlack);
+	SAFE_RELEASE(m_pBrushWhite);
 #endif // _DEBUG
 
 }
