@@ -30,6 +30,8 @@ protected:
 	CSelector		*m_pSystem;
 	GameOverPhase	m_ePhase;
 	ID2D1Bitmap		*m_pImage;
+	ID2D1Bitmap     *m_pImage2;
+	ID2D1Bitmap     *m_pImage3;
 	ID2D1SolidColorBrush	*m_pBlack;
 	INT m_iTimer;
 	INT m_iFadeTimer;

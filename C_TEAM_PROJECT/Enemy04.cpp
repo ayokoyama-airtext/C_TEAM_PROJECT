@@ -72,6 +72,14 @@ CEnemy04::~CEnemy04()
 *@brief	アニメーションメソッド
 */
 bool CEnemy04::move() {
+	if (m_bDamaged) {
+		if (m_iDotNum > 0) {
+			for (int i = 0; i < m_iDotNum; ++i) {
+				m_pDots[i]->SetStateZero();
+			}
+		}
+		return false;
+	}
 	if (m_bDamaged)
 		return false;
 
@@ -218,15 +226,19 @@ bool CEnemy04::move() {
 	//	フィールド範囲から出ないように調整
 	if (m_fX < m_fRad) {
 		m_fX = m_fRad;
+		m_bDamaged = true;
 	}
 	else if (m_fX > m_fFieldWidth - m_fRad) {
 		m_fX = m_fFieldWidth - m_fRad;
+		m_bDamaged = true;
 	}
 	if (m_fY < m_fRad) {
 		m_fY = m_fRad;
+		m_bDamaged = true;
 	}
 	else if (m_fY > m_fFieldHeight - m_fRad) {
 		m_fY = m_fFieldHeight - m_fRad;
+		m_bDamaged = true;
 	}
 
 	return true;
