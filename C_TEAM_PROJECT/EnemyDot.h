@@ -29,6 +29,8 @@ public:
 	virtual void SetStateZero();
 	virtual int GetState() override;
 
+	virtual void SetFlag(int flag) override { m_pParent->SetFlag(flag); }
+
 	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage);
 	static void Finalize();
 protected:
@@ -54,3 +56,6 @@ protected:
 #endif
 };
 
+
+#define SET_FLG_ATTACKED 0x01
+#define SET_FLG_DOT_DAMAGED 0x02

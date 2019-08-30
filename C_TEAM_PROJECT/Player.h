@@ -64,8 +64,8 @@ protected:
 	//	定数
 	static const int PLAYER_START_X = 960;
 	static const int PLAYER_START_Y = 540;
-	static const int START_DOT_NUM = 5;
-	static const int START_MAX_DOT_NUM = 5;
+	static const int START_DOT_NUM = 6;
+	static const int START_MAX_DOT_NUM = 6;
 	static const int BELT_RAD = 96;		//	ベルト半径
 	static const int DOT_RAD = 24;			//	ドット半径
 	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ

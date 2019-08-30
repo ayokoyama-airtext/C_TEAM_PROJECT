@@ -31,6 +31,8 @@ public:
 	virtual float GetRad() override;
 	virtual float GetAngle() override;
 
+	virtual void SetFlag(int flag) override;
+
 	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage);
 	static void Finalize();
 protected:
@@ -45,6 +47,7 @@ protected:
 	FLOAT	m_fScale;		//	大きさ(基本1.0f)
 	INT		m_iDotNum;		//	生きてるドットの数
 	INT		m_iMaxDotNum;	//	ドットの最大個数(成長するとこれが増える)(最大8?)
+	INT		m_iRandomMoveIndex;
 
 	std::vector<CEnemyDot*>	m_pDots;	//	保持しているドットへのポインタの配列
 
@@ -58,6 +61,7 @@ protected:
 	static const int EFLAG_SEARCH = 0x02;	//	索敵
 	static const int EFLAG_CHASE = 0x04;	//	追跡
 	static const int EFLAG_ESCAPE = 0x08;	//	逃走
+	static const int EFLAG_ATTACKED = 0x10;	//	攻撃後の待ち
 
 	//	定数
 	static const int BELT_RAD = 96;				//	ベルト半径
@@ -69,9 +73,11 @@ protected:
 	static const float ENEMY_ESCAPE_ROTATION_SPEED;
 	static const float ENEMY_ESCAPE_ANGLE;
 	static const float SEARCH_ANGLE;			//	索敵角度
-	static const int SEARCH_LENGTH = 1200;	//	索敵距離
+	static const int SEARCH_LENGTH = 750;	//	索敵距離
+	static const int MAX_CHASE_LENGTH = 800;		//	追跡時間
 	static const int ESCAPE_DURATION = 90;		//	逃走時間
 	static const int DAMAGED_DURATION = 30;		//	無敵時間
+	static const int ATTACKED_DURATION = 180;	//	攻撃後の待ち時間
 
 
 	//	静的メンバ(初期化を忘れずに)
@@ -79,6 +85,8 @@ protected:
 	static ID2D1Bitmap		*m_pImage;
 	static FLOAT m_fFieldWidth;
 	static FLOAT m_fFieldHeight;
+	static FLOAT m_pRandomMove[];
+	static const INT m_iRandomMoveSize;
 #ifdef _DEBUG
 	static ID2D1SolidColorBrush	*m_pBrush;
 	static ID2D1SolidColorBrush	*m_pRedBrush;

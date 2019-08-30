@@ -4,6 +4,7 @@
 *@brief		エネミーマネージャークラスの実装
 */
 #include "stdafx.h"
+#include <time.h>
 #include "Stage.h"
 #include "EnemyManager.h"
 #include "Enemy.h"
@@ -18,7 +19,11 @@
 CEnemyManager::CEnemyManager(CStage *pStage)
 {
 	m_iEnemyCount = 0;
+	m_iWave = 0;
+	m_iIndex = 0;
+	m_iRespawnNum = 0;
 	m_pParent = pStage;
+	srand(time(NULL));
 }
 
 
@@ -34,24 +39,90 @@ CEnemyManager::~CEnemyManager()
 IGameObject *CEnemyManager::CreateEnemy() {
 	IGameObject *pObj = NULL;
 
-	if (m_iEnemyCount >= 1)
+
+
+#if defined(yakihiro) || defined(ayokoyama)
+	
+	if (m_iEnemyCount > 0)
 		return pObj;
 
-#ifdef hikegami
-	pObj = new CEnemy02(1400.f, 1080.f, 1.f);
-#elif kmiyamoto
+	if (m_iIndex == m_szEnemySetDataSize) {
+		m_iIndex = 0;
+		m_iWave = 0;
+		return pObj;
+	}
+
+	int waveNum = m_pEnemySetData[m_iIndex++] &65535;
+	int enemyID = m_pEnemySetData[m_iIndex++] &65535;
+
+	if (waveNum == m_iWave) {
+		float playerX = m_pParent->playerCoords.playerX;
+		float playerY = m_pParent->playerCoords.playerY;
+
+		if (enemyID == 999) {
+			enemyID = ((rand() >> 4) % 6) + 1;
+		}
+
+		switch (enemyID) {
+		case 1:
+			pObj = new CEnemy(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			break;
+		case 2:
+			pObj = new CEnemy02(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			break;
+		case 3:
+			pObj = new CEnemy03(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			break;
+		case 4:
+			pObj = new CEnemy04(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			break;
+		case 5:
+			pObj = new CEnemy05(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			break;
+		case 6:
+			pObj = new CEnemy06(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			break;
+		}
+		m_iRespawnNum++;
+		if (m_iIndex == m_szEnemySetDataSize) {
+			m_iEnemyCount = m_iRespawnNum;
+			m_iRespawnNum = 0;
+			m_iIndex = m_szEnemySetDataSize;
+		}
+	}
+	else {
+		m_iIndex -= PITCH;
+		m_iEnemyCount = m_iRespawnNum;
+		m_iRespawnNum = 0;
+	}
+
+#elif defined(kmiyamoto)
+	if (m_iEnemyCount >= 1)
+		return pObj;
 	pObj = new CEnemy06(1400.f, 1080.f, 1.f);
-#elif tnakahara
+	m_iEnemyCount++;
+#elif defined(tnakahara)
+	if (m_iEnemyCount >= 1)
+		return pObj;
 	pObj = new CEnemy05(1400.f, 1080.f, 1.f);
-#elif stadayosi
+	m_iEnemyCount++;
+#elif defined(stadayosi)
+	if (m_iEnemyCount >= 1)
+		return pObj;
 	pObj = new CEnemy04(1400.f, 1080.f, 1.f);
-#elif yakihiro || ayokoyama
-	pObj = new CEnemy(1400.f, 1080.f, 1.f);
+	m_iEnemyCount++;
+#elif defined(hikegami)
+	if (m_iEnemyCount >= 1)
+		return pObj;
+	pObj = new CEnemy02(1400.f, 1080.f, 1.f);
+	m_iEnemyCount++;
 #else
+	if (m_iEnemyCount >= 1)
+		return pObj;
 	pObj = new CEnemy03(1400.f, 1080.f, 1.f);
+	m_iEnemyCount++;
 #endif
 	
-	m_iEnemyCount++;
 
 	return pObj;
 }
@@ -84,5 +155,23 @@ void CEnemyManager::Finalize() {
 
 
 void CEnemyManager::DecreaseEnemyCount() {
-	--m_iEnemyCount;
+	if (--m_iEnemyCount == 0) {
+		m_iWave++;
+	}
 }
+
+
+//	PITCH : 2 -> Wave番号, エネミー種類(999はランダムリスポーン)
+SHORT CEnemyManager::m_pEnemySetData[] = {
+	0, 1,
+	0, 1,
+	0, 1,
+	1, 1,
+	1, 1,
+	1, 1,
+	2, 1,
+	2, 1,
+	2, 999,
+};
+
+size_t CEnemyManager::m_szEnemySetDataSize = sizeof(CEnemyManager::m_pEnemySetData) / sizeof(SHORT);

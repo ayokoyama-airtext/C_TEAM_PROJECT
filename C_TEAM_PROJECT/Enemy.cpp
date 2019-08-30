@@ -5,8 +5,8 @@
 */
 #include "stdafx.h"
 #include <d2d1.h>
-
 #include <cmath>
+#include <time.h>
 #include "Stage.h"
 #include "Enemy.h"
 #include "EnemyDot.h"
@@ -21,8 +21,11 @@ const float CEnemy::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
 const float CEnemy::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
 const float CEnemy::SEARCH_ANGLE = cosf(PI * 0.5f);
 
-float CEnemy::m_fFieldWidth = 0.f;
-float CEnemy::m_fFieldHeight = 0.f;
+
+FLOAT CEnemy::m_pRandomMove[] = { 0.f, -1.f, 1.f, -1.f, 1.f };
+const INT CEnemy::m_iRandomMoveSize = _countof(CEnemy::m_pRandomMove);
+FLOAT CEnemy::m_fFieldWidth = 0.f;
+FLOAT CEnemy::m_fFieldHeight = 0.f;
 ID2D1Bitmap *CEnemy::m_pImage = NULL;
 CStage *CEnemy::m_pParent = NULL;
 #ifdef _DEBUG
@@ -44,6 +47,8 @@ CEnemy::CEnemy(float x, float y, float scale)
 	m_iMaxDotNum = 5;
 	m_iDotNum = m_iMaxDotNum;
 	m_fAngle = PI * 0.5f;
+	m_iRandomMoveIndex = 0;
+	srand(time(NULL));
 
 
 	for (int i = 0; i < m_iMaxDotNum; ++i) {
@@ -130,23 +135,45 @@ bool CEnemy::move() {
 			if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
 				if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
 					m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
+					m_iTimer = 0;
 					break;
 				}
 			}
 
+			if (m_iTimer == 0) {
+				m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
+				m_iTimer = 180;
+			}
 			//	進行方向を変更
-			m_fAngle += ROTATION_SPEED;
+			m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
 			//	進行方向へ加速
 			m_fVX = ENEMY_SPEED * dirVX;
 			m_fVY = ENEMY_SPEED * dirVY;
+			m_iTimer--;
 		}
 
 		break;
 
 	case EFLAG_CHASE:
-		m_iTimer++;
 		{
-			float l = 1.f / sqrtf(vx * vx + vy * vy);
+			float l = sqrtf(vx * vx + vy * vy);
+
+			//	離れすぎたら追跡中止
+			if (l > MAX_CHASE_LENGTH) {
+				if (m_iTimer++ <= ATTACKED_DURATION) {
+					float speedDecline = 0.5f * (FLOAT)(ATTACKED_DURATION - m_iTimer) / (FLOAT)ATTACKED_DURATION;
+					m_fVX = dirVX * ENEMY_SPEED * speedDecline;
+					m_fVY = dirVY * ENEMY_SPEED * speedDecline;
+				}
+				else {
+					m_iTimer = 0;
+					m_iBehaviorFlag = EFLAG_SEARCH;
+				}
+				break;
+			}
+
+			m_iTimer = 0;
+			l = 1.0f / l;
 			float sin = (dirVX * vy - dirVY * vx);
 			float cos = (dirVX * vx + dirVY * vy) * l;
 			if (sin > 0) {	//	プレイヤーは進行方向右側
@@ -178,6 +205,7 @@ bool CEnemy::move() {
 				}
 			}
 		}
+		
 		break;
 
 	case EFLAG_ESCAPE:	//	ダメージを受けると一定時間逃げる
@@ -188,18 +216,19 @@ bool CEnemy::move() {
 			m_iTimer = 0;
 			break;
 		}
-
-		float l = 1.f / sqrtf(vx * vx + vy * vy);
-		float sin = (dirVX * vy - dirVY * vx);
-		float cos = (dirVX * vx + dirVY * vy) * l;
-		if (sin > 0) {
-			if (cos > ENEMY_ESCAPE_ANGLE) {
-				m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
+		{
+			float l = 1.f / sqrtf(vx * vx + vy * vy);
+			float sin = (dirVX * vy - dirVY * vx);
+			float cos = (dirVX * vx + dirVY * vy) * l;
+			if (sin > 0) {
+				if (cos > ENEMY_ESCAPE_ANGLE) {
+					m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
+				}
 			}
-		}
-		else {
-			if (cos > ENEMY_ESCAPE_ANGLE) {
-				m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
+			else {
+				if (cos > ENEMY_ESCAPE_ANGLE) {
+					m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
+				}
 			}
 		}
 
@@ -207,6 +236,16 @@ bool CEnemy::move() {
 		m_fVY = ENEMY_ESCAPE_SPEED * sinf(m_fAngle);
 		break;
 
+	case EFLAG_ATTACKED:
+		m_iTimer++;
+		if (m_iTimer >= ATTACKED_DURATION) {
+			m_iBehaviorFlag = EFLAG_IDLE;
+			m_iTimer = 0;
+		}
+		float speedDecline = 0.5f * (FLOAT)(ATTACKED_DURATION - m_iTimer) / (FLOAT)ATTACKED_DURATION;
+		m_fVX = dirVX * ENEMY_SPEED * speedDecline;
+		m_fVY = dirVY * ENEMY_SPEED * speedDecline;
+		break;
 	}
 
 	
@@ -373,6 +412,29 @@ float CEnemy::GetRad() {
 */
 float CEnemy::GetAngle() {
 	return m_fAngle;
+}
+
+/**
+*@brief	フラグを設定する
+*@note	flag 1: 攻撃命中
+*			 2: ドットがダメージを受けた
+*/
+void CEnemy::SetFlag(int flag) {
+
+	switch (flag) {
+	case 1:
+		m_iTimer = 0;
+		m_iBehaviorFlag = EFLAG_ATTACKED;
+		break;
+	case 2:
+		if (m_iBehaviorFlag != EFLAG_ESCAPE) {
+			m_iTimer = 0;
+			m_iBehaviorFlag = EFLAG_ESCAPE;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 

@@ -179,16 +179,16 @@ bool CPlayer::move() {
 
 	//	デバッグ用操作
 #ifdef _DEBUG
-	//	最大ドット数を増やす
-	if (GetAsyncKeyState(INC_MAXDOT_KEY)) {
-		if (!INC_MAXDOT_FLAG) {
-			m_iMaxDotNum++;
-			INC_MAXDOT_FLAG = true;
-		}
-	}
-	else {
-		INC_MAXDOT_FLAG = false;
-	}
+	////	最大ドット数を増やす
+	//if (GetAsyncKeyState(INC_MAXDOT_KEY)) {
+	//	if (!INC_MAXDOT_FLAG) {
+	//		m_iMaxDotNum++;
+	//		INC_MAXDOT_FLAG = true;
+	//	}
+	//}
+	//else {
+	//	INC_MAXDOT_FLAG = false;
+	//}
 
 
 #endif // _DEBUG

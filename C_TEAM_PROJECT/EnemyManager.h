@@ -24,5 +24,13 @@ public:
 protected:
 	CStage	*m_pParent;
 	int		m_iEnemyCount;	//	現在のエネミーの数
+	int		m_iWave;		//	現在のウェーブ数
+	int		m_iIndex;
+	int		m_iRespawnNum;	//	一つのwaveでリスポーンしたエネミーの数
+
+	static const int PITCH = 2;
+
+	static SHORT m_pEnemySetData[];
+	static size_t m_szEnemySetDataSize;
 };
 

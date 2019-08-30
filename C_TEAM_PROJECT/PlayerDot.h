@@ -26,6 +26,7 @@ public:
 	virtual int GetState() override;
 	virtual float GetX() override;
 	virtual float GetY() override;
+	virtual int GetNumber() override { return m_iNumber; }
 
 	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage, CPlayer *pPlayer);
 	static void Finalize();

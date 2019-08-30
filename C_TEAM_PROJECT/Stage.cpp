@@ -15,7 +15,6 @@
 const FLOAT CStage::FIELD_WIDTH = 1920.f * 3.f;
 const FLOAT CStage::FIELD_HEIGHT = 1920.f * 3.f;
 
-
 CStage::CStage(CSelector *pSystem)
 {
 	m_pSystem = pSystem;
@@ -207,6 +206,63 @@ GameSceneResultCode CStage::move() {
 		//		当たり判定	
 		//********************************
 
+
+		//	EnemyDot(先頭についてるのだけ)とプレイヤー&プレイヤードット
+		if (m_pPlayerDots && m_pEnemyDots) {
+			std::list<IGameObject*>::iterator eIt = m_pEnemyDots->begin();
+			std::list<IGameObject*>::iterator pIt;
+			while (eIt != m_pEnemyDots->end()) {
+				if (0 == (*eIt)->GetNumber()) {
+					if ((*eIt)->collide(m_pPlayer)) {
+						m_pPlayer->damage(1.0f);
+					}
+					pIt = m_pPlayerDots->begin();
+					while (pIt != m_pPlayerDots->end()) {
+						if ((*eIt)->collide(*pIt)) {
+							if (0 == (*pIt)->GetNumber()) {
+								(*eIt)->damage(1.f);
+								(*eIt)->SetFlag(SET_FLG_DOT_DAMAGED);
+							}
+							else {
+								(*pIt)->damage(1.f);
+								(*eIt)->SetFlag(SET_FLG_ATTACKED);
+							}
+						}
+						++pIt;
+					}
+				}
+				++eIt;
+			}	//	--while終わり--
+		}
+
+
+
+		//	PlayerDotとEnemyDot
+		if (m_pPlayerDots && m_pEnemyDots) {
+			std::list<IGameObject*>::iterator pIt = m_pPlayerDots->begin();
+			std::list<IGameObject*>::iterator eIt;
+			int i = 0;
+			while ((i < playerCoords.playerMaxDotNum) && (pIt != m_pPlayerDots->end())) {
+				eIt = m_pEnemyDots->begin();
+				while (eIt != m_pEnemyDots->end()) {
+					if ((*eIt)->collide((*pIt))) {
+						if (playerCoords.playerIsWHmode == false) {
+							(*eIt)->damage(1.0f);
+							(*eIt)->SetFlag(SET_FLG_DOT_DAMAGED);
+						}
+						else {
+							(*pIt)->damage(1.0f);
+							(*eIt)->SetFlag(SET_FLG_ATTACKED);
+						}
+					}
+					++eIt;
+				}
+				++pIt;
+				++i;
+			}
+		}
+
+
 		//	PlayerDotとエネミー
 		if (m_pPlayerDots && m_pEnemies && playerCoords.playerIsWHmode == false) {
 			std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
@@ -225,48 +281,7 @@ GameSceneResultCode CStage::move() {
 			}
 		}
 
-		//	PlayerDotとEnemyDot
-		if (m_pPlayerDots && m_pEnemyDots) {
-			std::list<IGameObject*>::iterator it = m_pPlayerDots->begin();
-			int i = 0;
-			while ((i < playerCoords.playerMaxDotNum) && (it != m_pPlayerDots->end())) {
-				std::list<IGameObject*>::iterator it2 = m_pEnemyDots->begin();
-				while (it2 != m_pEnemyDots->end()) {
-					if ((*it2)->collide((*it))) {
-						if (playerCoords.playerIsWHmode == false) {
-							(*it2)->damage(1.0f);
-						}
-						else {
-							(*it)->damage(1.0f);
-						}
-					}
-					++it2;
-				}
-				++it;
-				++i;
-			}
-		}
-
-		//	EnemyDot(先頭についてるのだけ)とプレイヤー&プレイヤードット
-		if (m_pPlayerDots && m_pEnemyDots) {
-			std::list<IGameObject*>::iterator eIt = m_pEnemyDots->begin();
-			std::list<IGameObject*>::iterator pIt;
-			while (eIt != m_pEnemyDots->end()) {
-				if (0 == (*eIt)->GetNumber()) {
-					if ((*eIt)->collide(m_pPlayer)) {
-						m_pPlayer->damage(1.0f);
-					}
-					pIt = m_pPlayerDots->begin();
-					while (pIt != m_pPlayerDots->end()) {
-						if ((*eIt)->collide(*pIt)) {
-							(*pIt)->damage(1.f);
-						}
-						++pIt;
-					}
-				}
-				++eIt;
-			}	//	--while終わり--
-		}
+		
 
 		//	Shot と　エネミードット
 		if (m_pShots && m_pEnemyDots) {
@@ -278,6 +293,7 @@ GameSceneResultCode CStage::move() {
 				while (eIt != m_pEnemyDots->end() && IsHit == false) {
 					if ((*sIt)->collide(*eIt)) {
 						(*eIt)->damage(1.f);
+						(*eIt)->SetFlag(SET_FLG_DOT_DAMAGED);
 						(*sIt)->damage(1.f);
 						IsHit = true;
 					}

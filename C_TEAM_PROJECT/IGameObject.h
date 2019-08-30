@@ -32,6 +32,8 @@ public:
 	virtual float GetAngle() { return 0.f; }
 	virtual int GetNumber() { return -1; }
 	virtual int GetState() { return -1; }
+
+	virtual void SetFlag(int flag) {};
 };
 
 
