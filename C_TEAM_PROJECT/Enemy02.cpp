@@ -15,7 +15,7 @@
 
 #define ENEMY_FILE_NAME	_T("res\\enemy.png")
 const float CEnemy02::ROTATION_SPEED = 0.025f;
-const float CEnemy02::ENEMY_SPEED = 5.f;
+const float CEnemy02::ENEMY_SPEED = 8.f;
 const float CEnemy02::ENEMY_ESCAPE_SPEED = 8.f;
 const float CEnemy02::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
 const float CEnemy02::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
@@ -140,35 +140,37 @@ bool CEnemy02::move() {
 	case EFLAG_CHASE:
 		m_iTimer++;
 		{
-			float l = 1.f / sqrtf(vx * vx + vy * vy);
-			float sin = (dirVX * vy - dirVY * vx);
-			float cos = (dirVX * vx + dirVY * vy) * l;
-			if (sin > 0) {	//	プレイヤーは進行方向右側
-				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
-					m_fVX = vx * l;
-					m_fVY = vy * l;
-					m_fAngle = atan2(m_fVY, m_fVX);
-					m_fVX *= ENEMY_SPEED;
-					m_fVY *= ENEMY_SPEED;
+			for (int i = 0; i < 10; i++) {
+				float l = 1.f / sqrtf(vx * vx + vy * vy);
+				float sin = (dirVX * vy - dirVY * vx);
+				float cos = (dirVX * vx + dirVY * vy) * l;
+				if (sin > 0) {	//	プレイヤーは進行方向右側
+					if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+						m_fVX = vx * l;
+						m_fVY = vy * l;
+						m_fAngle = atan2(m_fVY, m_fVX);
+						m_fVX *= ENEMY_SPEED + 1;
+						m_fVY *= ENEMY_SPEED + 1;
+					}
+					else {
+						m_fVX = dirVX * ENEMY_SPEED + 1;
+						m_fVY = dirVY * ENEMY_SPEED + 1;
+						m_fAngle += ROTATION_SPEED;
+					}
 				}
-				else {
-					m_fVX = dirVX * ENEMY_SPEED;
-					m_fVY = dirVY * ENEMY_SPEED;
-					m_fAngle += ROTATION_SPEED;
-				}
-			}
-			else {	//	プレイヤーは進行方向左側
-				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
-					m_fVX = vx * l;
-					m_fVY = vy * l;
-					m_fAngle = atan2(m_fVY, m_fVX);
-					m_fVX *= ENEMY_SPEED;
-					m_fVY *= ENEMY_SPEED;
-				}
-				else {
-					m_fVX = dirVX * ENEMY_SPEED;
-					m_fVY = dirVY * ENEMY_SPEED;
-					m_fAngle -= ROTATION_SPEED;
+				else {	//	プレイヤーは進行方向左側
+					if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+						m_fVX = vx * l;
+						m_fVY = vy * l;
+						m_fAngle = atan2(m_fVY, m_fVX);
+						m_fVX *= ENEMY_SPEED + 1;
+						m_fVY *= ENEMY_SPEED + 1;
+					}
+					else {
+						m_fVX = dirVX * ENEMY_SPEED + 1;
+						m_fVY = dirVY * ENEMY_SPEED + 1;
+						m_fAngle -= ROTATION_SPEED;
+					}
 				}
 			}
 		}
@@ -188,12 +190,12 @@ bool CEnemy02::move() {
 		float cos = (dirVX * vx + dirVY * vy) * l;
 		if (sin > 0) {
 			if (cos > ENEMY_ESCAPE_ANGLE) {
-				m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
+				m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED-4;
 			}
 		}
 		else {
 			if (cos > ENEMY_ESCAPE_ANGLE) {
-				m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
+				m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED-4;
 			}
 		}
 
