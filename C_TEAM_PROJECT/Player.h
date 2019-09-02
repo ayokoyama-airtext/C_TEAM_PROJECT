@@ -48,6 +48,9 @@ protected:
 	INT		m_iDotNum;		//	生きてるドットの数
 	INT		m_iMaxDotNum;	//	ドットの最大個数(成長するとこれが増える)(最大8?)
 
+	FLOAT	m_fDecreaseCos;	//	減速用のcos
+	FLOAT	m_fDecreaseSin;	//	減速用のsin
+
 	std::vector<CPlayerDot*>	m_pDots;
 
 	bool	m_bDamaged;
@@ -62,8 +65,8 @@ protected:
 	
 
 	//	定数
-	static const int PLAYER_START_X = 960;
-	static const int PLAYER_START_Y = 540;
+	static const int PLAYER_START_X = 2880;
+	static const int PLAYER_START_Y = 2880;
 	static const int START_DOT_NUM = 6;
 	static const int START_MAX_DOT_NUM = 6;
 	static const int BELT_RAD = 96;		//	ベルト半径
