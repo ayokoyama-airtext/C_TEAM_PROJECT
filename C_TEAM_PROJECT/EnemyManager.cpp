@@ -63,24 +63,40 @@ IGameObject *CEnemyManager::CreateEnemy() {
 			enemyID = ((rand() >> 4) % 6) + 1;
 		}
 
+		float RespawnX = playerX + (-1080 + 1080 * (m_iRespawnNum % 3));
+		if (RespawnX >= m_pParent->FIELD_WIDTH) {
+			RespawnX -= m_pParent->FIELD_WIDTH;
+		}
+		else if (RespawnX <= 0) {
+			RespawnX += m_pParent->FIELD_WIDTH;
+		}
+
+		float RespawnY = playerY + (-960 + 960 * (m_iRespawnNum & 1) * 2);
+		if (RespawnY >= m_pParent->FIELD_HEIGHT) {
+			RespawnY -= m_pParent->FIELD_HEIGHT;
+		}
+		else if (RespawnY <= 0) {
+			RespawnY += m_pParent->FIELD_HEIGHT;
+		}
+
 		switch (enemyID) {
 		case 1:
-			pObj = new CEnemy(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			pObj = new CEnemy(RespawnX, RespawnY, 1.f);
 			break;
 		case 2:
-			pObj = new CEnemy02(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			pObj = new CEnemy02(RespawnX, RespawnY, 1.f);
 			break;
 		case 3:
-			pObj = new CEnemy03(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			pObj = new CEnemy03(RespawnX, RespawnY, 1.f);
 			break;
 		case 4:
-			pObj = new CEnemy04(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			pObj = new CEnemy04(RespawnX, RespawnY, 1.f);
 			break;
 		case 5:
-			pObj = new CEnemy05(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			pObj = new CEnemy05(RespawnX, RespawnY, 1.f);
 			break;
 		case 6:
-			pObj = new CEnemy06(playerX + (-960 + 960 * (m_iRespawnNum % 3)), playerY + (-740 + 740 * (m_iRespawnNum & 1) * 2), 1.f);
+			pObj = new CEnemy06(RespawnX, RespawnY, 1.f);
 			break;
 		}
 		m_iRespawnNum++;

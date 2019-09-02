@@ -22,6 +22,8 @@ CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 	// ÉÅÉìÉoèâä˙âª
 	m_iCount = 0;
 	m_iWait = 0;
+	m_iEndTime = 0;
+	m_iEndScore = 0;
 	m_eGamePhase = GAMEPHASE_INIT;
 	m_pScene = NULL;
 	
@@ -116,6 +118,13 @@ void CSelector::doAnim() {
 			move = 1;
 		}
 
+#if defined(ayokoyama) || defined(yakihiro)
+		if (GetAsyncKeyState(0x52)) {
+			m_eGamePhase = GAMEPHASE_RESET;
+		}
+#endif // defined(ayokoyama) || defined(yakihiro)
+
+
 		if (move < 0)
 			break;
 
@@ -144,6 +153,8 @@ void CSelector::doAnim() {
 		break;
 
 	case GAMEPHASE_RESET:
+		m_iEndTime = 0;
+		m_iEndScore = 0;
 		SAFE_DELETE(m_pScene);
 		m_pScene = new CTitle(this);
 		m_eGamePhase = GAMEPHASE_TITLE;

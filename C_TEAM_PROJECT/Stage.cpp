@@ -19,6 +19,7 @@ CStage::CStage(CSelector *pSystem)
 {
 	m_pSystem = pSystem;
 	m_iTimer = 0;
+	m_iScore = 0;
 	m_iGameFinishState = 0;
 	m_ePhase = STAGE_INIT;
 
@@ -44,6 +45,8 @@ CStage::CStage(CSelector *pSystem)
 		m_pShots = new std::list<IGameObject*>();
 
 		m_pUI = new CUI(this);
+
+		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBlackBrush);
 
 #ifdef _DEBUG
 		m_pBrush = NULL;
@@ -110,6 +113,7 @@ CStage::~CStage()
 	SAFE_DELETE(m_pUI);
 	SAFE_DELETE(m_pBG);
 	SAFE_DELETE(m_pPlayer);
+	SAFE_RELEASE(m_pBlackBrush);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pBrush);
@@ -134,8 +138,15 @@ GameSceneResultCode CStage::move() {
 			m_pBG->move();
 
 		if (m_pPlayer) {
-			m_pPlayer->move();
-			m_pPlayer->CalcDrawCoord(&playerCoords);
+			if (m_pPlayer->move()) {
+				m_pPlayer->CalcDrawCoord(&playerCoords);
+			}
+			else {
+				m_ePhase = STAGE_DONE;
+				m_pSystem->SetScoreAndTime(m_iTimer, m_iScore);
+				m_iTimer = 0;
+				break;
+			}
 		}
 		
 		//  PlayerDotÇÃèàóù
@@ -310,6 +321,9 @@ GameSceneResultCode CStage::move() {
 		break;
 
 	case STAGE_DONE:
+		if (m_iTimer < 120)
+			break;
+
 		if (m_iGameFinishState & GAME_CLEAR) {
 			return GAMESCENE_END_OK;
 		}
@@ -367,6 +381,18 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	if (m_pUI)
 		m_pUI->draw(pRenderTarget);
+
+	if (m_ePhase == STAGE_DONE) {
+		D2D1_SIZE_F screen = pRenderTarget->GetSize();
+		D2D1_RECT_F rc;
+		rc.left = 0.f;
+		rc.top = 0.f;
+		rc.right = screen.width;
+		rc.bottom = screen.height;
+		float opacity = m_iTimer / 120.f;
+		m_pBlackBrush->SetOpacity(opacity);
+		pRenderTarget->FillRectangle(rc, m_pBlackBrush);
+	}
 
 #ifdef _DEBUG
 	//if (m_pBrush) {

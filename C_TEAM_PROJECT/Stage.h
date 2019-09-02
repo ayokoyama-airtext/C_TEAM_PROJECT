@@ -72,6 +72,7 @@ public:
 	static const FLOAT FIELD_WIDTH;
 	static const FLOAT FIELD_HEIGHT;
 protected:
+	ID2D1SolidColorBrush	*m_pBlackBrush;
 	CSelector		*m_pSystem;
 	CPlayer			*m_pPlayer;
 	CBG				*m_pBG;

@@ -18,6 +18,9 @@
 const float CPlayer::ROTATION_SPEED = 0.05f;
 const float CPlayer::PLAYER_SPEED = 10.f;
 
+#define DECREASE_SPEED 0.05f
+#define BRAKE_SPEED	0.5f
+
 
 CPlayer::CPlayer(CStage *pStage)
 {
@@ -36,6 +39,9 @@ CPlayer::CPlayer(CStage *pStage)
 	m_fScale = 1.0f;
 	m_iDotNum = START_DOT_NUM;
 	m_iMaxDotNum = START_MAX_DOT_NUM;
+
+	m_fDecreaseCos = 0.f;
+	m_fDecreaseSin = 0.f;
 
 	m_bDamaged = false;
 	m_bIsWhiteHallMode = false;
@@ -83,9 +89,37 @@ CPlayer::~CPlayer()
 *@brief	アニメーションメソッド
 */
 bool CPlayer::move() {
-	m_fVX = 0;
-	m_fVY = 0;
+	float cos = cosf(m_fAngle);
+	float sin = sinf(m_fAngle);
 
+	
+	if (m_bDamaged) {
+		return false;
+	}
+
+
+	//	自動減速
+	if (m_fVX > 0) {
+		m_fVX += -DECREASE_SPEED * m_fDecreaseCos;
+		if (m_fVX <= 0)
+			m_fVX = 0;
+	}
+	else if (m_fVX < 0) {
+		m_fVX += -DECREASE_SPEED * m_fDecreaseCos;
+		if (m_fVX >= 0)
+			m_fVX = 0;
+	}
+	if (m_fVY > 0) {
+		m_fVY += -DECREASE_SPEED * m_fDecreaseSin;
+		if (m_fVY <= 0)
+			m_fVY = 0;
+	}
+	else if (m_fVY < 0) {
+		m_fVY += -DECREASE_SPEED * m_fDecreaseSin;
+		if (m_fVY >= 0)
+			m_fVY = 0;
+	}
+	
 	if (m_iDamagedTimer > 0) {
 		m_iDamagedTimer--;
 	}
@@ -116,11 +150,40 @@ bool CPlayer::move() {
 	//********************************************************
 	//					移動処理
 	//********************************************************
+	
+	//	前進
 	if (GetAsyncKeyState(VK_UP)) {
-		m_fVX = PLAYER_SPEED * cosf(m_fAngle);
-		m_fVY = PLAYER_SPEED * sinf(m_fAngle);
+		m_fVX = PLAYER_SPEED * cos;
+		m_fVY = PLAYER_SPEED * sin;
+		m_fDecreaseCos = cos;
+		m_fDecreaseSin = sin;
 	}
 
+	//	ブレーキ
+	if (GetAsyncKeyState(VK_DOWN)) {
+		if (m_fVX > 0) {
+			m_fVX += -BRAKE_SPEED * m_fDecreaseCos;
+			if (m_fVX <= 0)
+				m_fVX = 0;
+		}
+		else if (m_fVX < 0) {
+			m_fVX += -BRAKE_SPEED * m_fDecreaseCos;
+			if (m_fVX >= 0)
+				m_fVX = 0;
+		}
+		if (m_fVY > 0) {
+			m_fVY += -BRAKE_SPEED * m_fDecreaseSin;
+			if (m_fVY <= 0)
+				m_fVY = 0;
+		}
+		else if (m_fVY < 0) {
+			m_fVY += -BRAKE_SPEED * m_fDecreaseSin;
+			if (m_fVY >= 0)
+				m_fVY = 0;
+		}
+	}
+
+	//	右回転
 	if (GetAsyncKeyState(VK_RIGHT)) {
 		m_fAngle += ROTATION_SPEED;
 		if (m_fAngle > 2.f * PI) {
@@ -128,6 +191,7 @@ bool CPlayer::move() {
 		}
 	}
 
+	//	左回転
 	if (GetAsyncKeyState(VK_LEFT)) {
 		m_fAngle -= ROTATION_SPEED;
 		if (m_fAngle < -2.f * PI) {
@@ -145,7 +209,7 @@ bool CPlayer::move() {
 				pObj = NULL;
 				if (m_pDots[i]->GetState()) {
 					float x = m_pDots[i]->GetX(), y = m_pDots[i]->GetY();
-					pObj = new CShot(x, y, cosf(m_fAngle), sinf(m_fAngle));
+					pObj = new CShot(x, y, cos, sin);
 					if (pObj) {
 						m_pParent->AddShot(pObj);
 					}

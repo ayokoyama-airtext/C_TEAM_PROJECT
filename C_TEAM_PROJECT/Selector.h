@@ -37,10 +37,17 @@ public:
 	virtual ~CSelector(void);
 	void doAnim();		//	ゲーム全体のアニメート
 	void doDraw(ID2D1RenderTarget *pRenderTarget);	//	ゲーム全体の描画
+
+	void SetScoreAndTime(int time, int score) { m_iEndTime = time; m_iEndScore = score; }
+	int GetEndTime() { return m_iEndTime; }
+	int GetEndScore() { return m_iEndScore; }
+
 	ID2D1RenderTarget	*GetRenderTarget();
 	IDWriteTextFormat	*GetTextFormat();
 protected:
 	ID2D1RenderTarget		*m_pRenderTarget;
+	int	m_iEndTime;		//	ゲームクリア/オーバー 時のタイム
+	int m_iEndScore;	//	ゲームクリア/オーバー 時のスコア
 
 	IGameScene		*m_pScene;		//	シーン
 	GamePhase	m_eGamePhase;	//	状態変数
