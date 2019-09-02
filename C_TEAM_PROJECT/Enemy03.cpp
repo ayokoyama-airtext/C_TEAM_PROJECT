@@ -144,30 +144,30 @@ bool CEnemy03::move() {
 			float sin = (dirVX * vy - dirVY * vx);
 			float cos = (dirVX * vx + dirVY * vy) * l;
 			if (sin > 0) {	//	プレイヤーは進行方向右側
-				if (cos < cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
 					m_fVX = vx * l;
 					m_fVY = vy * l;
 					m_fAngle = atan2(m_fVY, m_fVX);
-					m_fVX *= ENEMY_SPEED+2;
-					m_fVY *= ENEMY_SPEED+2;
+					m_fVX *= ENEMY_SPEED;
+					m_fVY *= ENEMY_SPEED;
 				}
 				else {
-					m_fVX = dirVX * ENEMY_SPEED+2;
-					m_fVY = dirVY * ENEMY_SPEED+2;
+					m_fVX = dirVX * ENEMY_SPEED;
+					m_fVY = dirVY * ENEMY_SPEED;
 					m_fAngle += ROTATION_SPEED;
 				}
 			}
 			else {	//	プレイヤーは進行方向左側
-				if (cos < cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
 					m_fVX = vx * l;
 					m_fVY = vy * l;
 					m_fAngle = atan2(m_fVY, m_fVX);
-					m_fVX *= ENEMY_SPEED+2;
-					m_fVY *= ENEMY_SPEED+2;
+					m_fVX *= ENEMY_SPEED;
+					m_fVY *= ENEMY_SPEED;
 				}
 				else {
-					m_fVX = dirVX * ENEMY_SPEED+2;
-					m_fVY = dirVY * ENEMY_SPEED+2;
+					m_fVX = dirVX * ENEMY_SPEED;
+					m_fVY = dirVY * ENEMY_SPEED;
 					m_fAngle -= ROTATION_SPEED;
 				}
 			}
@@ -175,7 +175,6 @@ bool CEnemy03::move() {
 		break;
 
 	case EFLAG_ESCAPE:	//	ダメージを受けると一定時間逃げる
-		
 		if (m_iDamagedTimer > 0)
 			m_iDamagedTimer--;
 		if (m_iTimer++ > ESCAPE_DURATION) {
@@ -187,13 +186,13 @@ bool CEnemy03::move() {
 		float l = 1.f / sqrtf(vx * vx + vy * vy);
 		float sin = (dirVX * vy - dirVY * vx);
 		float cos = (dirVX * vx + dirVY * vy) * l;
-		if (sin < 0) {
-			if (cos < ENEMY_ESCAPE_ANGLE) {
+		if (sin > 0) {
+			if (cos > ENEMY_ESCAPE_ANGLE) {
 				m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
 			}
 		}
 		else {
-			if (cos < ENEMY_ESCAPE_ANGLE) {
+			if (cos > ENEMY_ESCAPE_ANGLE) {
 				m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
 			}
 		}
@@ -214,7 +213,6 @@ bool CEnemy03::move() {
 	else if (m_fAngle < -2.f * PI) {
 		m_fAngle += 2.f * PI;
 	}
-
 
 
 	//	フィールド範囲から出ないように調整
