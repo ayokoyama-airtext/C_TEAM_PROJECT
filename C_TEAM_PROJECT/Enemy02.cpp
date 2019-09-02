@@ -15,7 +15,7 @@
 
 #define ENEMY_FILE_NAME	_T("res\\enemy.png")
 const float CEnemy02::ROTATION_SPEED = 0.025f;
-const float CEnemy02::ENEMY_SPEED = 5.f;
+const float CEnemy02::ENEMY_SPEED = 8.f;
 const float CEnemy02::ENEMY_ESCAPE_SPEED = 8.f;
 const float CEnemy02::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
 const float CEnemy02::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
@@ -144,7 +144,7 @@ bool CEnemy02::move() {
 			float sin = (dirVX * vy - dirVY * vx);
 			float cos = (dirVX * vx + dirVY * vy) * l;
 			if (sin > 0) {	//	プレイヤーは進行方向右側
-				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+				if (cos < cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
 					m_fVX = vx * l;
 					m_fVY = vy * l;
 					m_fAngle = atan2(m_fVY, m_fVX);
@@ -152,8 +152,8 @@ bool CEnemy02::move() {
 					m_fVY *= ENEMY_SPEED;
 				}
 				else {
-					m_fVX = dirVX * ENEMY_SPEED;
-					m_fVY = dirVY * ENEMY_SPEED;
+					m_fVX = dirVX * ENEMY_SPEED*m_fAngle;
+					m_fVY = dirVY * ENEMY_SPEED*m_fAngle;
 					m_fAngle += ROTATION_SPEED;
 				}
 			}
@@ -175,9 +175,9 @@ bool CEnemy02::move() {
 		break;
 
 	case EFLAG_ESCAPE:	//	ダメージを受けると一定時間逃げる
-		if (m_iDamagedTimer > 0)
+		if (m_iDamagedTimer < 0)
 			m_iDamagedTimer--;
-		if (m_iTimer++ > ESCAPE_DURATION) {
+		if (m_iTimer++ < ESCAPE_DURATION) {
 			m_iBehaviorFlag = EFLAG_SEARCH;
 			m_iTimer = 0;
 			break;
@@ -188,12 +188,12 @@ bool CEnemy02::move() {
 		float cos = (dirVX * vx + dirVY * vy) * l;
 		if (sin > 0) {
 			if (cos > ENEMY_ESCAPE_ANGLE) {
-				m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
+				m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
 			}
 		}
 		else {
 			if (cos > ENEMY_ESCAPE_ANGLE) {
-				m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
+				m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
 			}
 		}
 
