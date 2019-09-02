@@ -12,13 +12,16 @@
 #include "TextureLoader.h"
 
 
-#define PLAYERDOT_FILE_NAME	_T("res\\playerdot.png")
+#define PLAYERDOT_FILE_NAME			_T("res\\player_dot.png")
+#define PLAYERDOT_STRAW_FILE_NAME	_T("res\\straw_799x740.png")
 
 //	staticƒƒ“ƒo‚Ì‰Šú‰»
-ID2D1Bitmap *CPlayerDot::m_pImage = NULL;
+ID2D1Bitmap *CPlayerDot::m_pDotImage = NULL;
+ID2D1Bitmap *CPlayerDot::m_pStrawImage = NULL;
 int	CPlayerDot::m_iCount = 0;
 CStage *CPlayerDot::m_pParent = NULL;
 CPlayer *CPlayerDot::m_pPlayer = NULL;
+float CPlayerDot::m_pStrawTexCoord[] = { 0.f, 799.f, 1598.f, 2397.f };
 #ifdef _DEBUG
 ID2D1SolidColorBrush *CPlayerDot::m_pBrushBlack = NULL;
 ID2D1SolidColorBrush *CPlayerDot::m_pBrushWhite = NULL;
@@ -32,6 +35,7 @@ CPlayerDot::CPlayerDot()
 	m_iCount++;
 	m_iTimer = 0;
 	m_fRad = (FLOAT)DEFAULT_RAD;
+	m_fAngle = 0;
 	m_iState = 1;
 }
 
@@ -43,13 +47,24 @@ CPlayerDot::~CPlayerDot()
 
 
 bool CPlayerDot::move() {
-	float angle = (m_pParent->playerCoords.playerAngle) + 2.f * PI * ((FLOAT)m_iNumber / (m_pParent->playerCoords.playerMaxDotNum));
+	//	‰ó‚ê‚Ä‚½‚ç–ß‚é
+	if (!m_iState)
+		return true;
+
+	if (false == m_pParent->playerCoords.playerIsWHmode) {
+		m_iTimer++;
+	}
+	else {
+		m_iTimer = 0;
+	}
+
+	m_fAngle = (m_pParent->playerCoords.playerAngle) + 2.f * PI * ((FLOAT)m_iNumber / (m_pParent->playerCoords.playerMaxDotNum));
 	float playerX = m_pParent->playerCoords.playerX;
 	float playerY = m_pParent->playerCoords.playerY;
 	float playerRad = m_pParent->playerCoords.playerRad;
 
-	m_fX = playerX + playerRad * cosf(angle);
-	m_fY = playerY + playerRad * sinf(angle);
+	m_fX = playerX + playerRad * cosf(m_fAngle);
+	m_fY = playerY + playerRad * sinf(m_fAngle);
 
 	return true;
 }
@@ -60,11 +75,59 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	if (!m_iState)
 		return;
 
+
 	float playerDrawX = m_pParent->playerCoords.playerDrawX;
 	float playerDrawY = m_pParent->playerCoords.playerDrawY;
 	float playerX = m_pParent->playerCoords.playerX;
 	float playerY = m_pParent->playerCoords.playerY;
 	bool  IsWHmode = m_pParent->playerCoords.playerIsWHmode;
+
+	D2D1_RECT_F		rc, src;
+	D2D1_SIZE_F		texSize;
+	D2D1_POINT_2F	center;
+	center.x = playerDrawX + (m_fX - playerX);
+	center.y = playerDrawY + (m_fY - playerY);
+	
+
+	//	Dot
+	src.left = 0.f;
+	src.top = 0.f;
+	src.right = src.left + m_fRad * 2.f;
+	src.bottom = src.top + m_fRad * 2.f;
+
+	rc.left = center.x - m_fRad;
+	rc.right = rc.left + m_fRad * 2.f;
+	rc.top = center.y - m_fRad;
+	rc.bottom = rc.top + m_fRad * 2.f;
+
+	float degreeAngle = 180.f * (m_fAngle + PI * 0.5f) / PI;
+	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(degreeAngle, center);
+	pRenderTarget->SetTransform(rotation);
+
+	pRenderTarget->DrawBitmap(m_pDotImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	
+	//	Straw
+	if (m_pParent->playerCoords.playerIsWHmode == false) {
+		int texIndex = (m_iTimer % 24) / 6;
+		float opacity = 1.0f;
+		if (m_iTimer < 30) {
+			opacity = (FLOAT)m_iTimer / 30.f;
+		}
+
+		src.left = m_pStrawTexCoord[texIndex];
+		src.right = src.left + 799.f;
+		src.top = 0.f;
+		src.bottom = src.top + 740.f;
+
+		rc.left -= m_fRad;
+		rc.right += m_fRad;
+		rc.bottom = rc.top;
+		rc.top -= m_fRad * 4;
+
+		pRenderTarget->DrawBitmap(m_pStrawImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	}
+
+	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
 #ifdef _DEBUG
 	D2D1_ELLIPSE el;
@@ -146,8 +209,10 @@ float CPlayerDot::GetY() {
 }
 
 void CPlayerDot::Restore(ID2D1RenderTarget *pTarget, CStage *pStage, CPlayer *pPlayer) {
-	SAFE_RELEASE(m_pImage);
-	//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_FILE_NAME, &m_pImage);
+	SAFE_RELEASE(m_pDotImage);
+	SAFE_RELEASE(m_pStrawImage);
+	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_FILE_NAME, &m_pDotImage);
+	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_STRAW_FILE_NAME, &m_pStrawImage);
 	m_pParent = pStage;
 	m_pPlayer = pPlayer;
 
@@ -155,14 +220,17 @@ void CPlayerDot::Restore(ID2D1RenderTarget *pTarget, CStage *pStage, CPlayer *pP
 	SAFE_RELEASE(m_pBrushBlack);
 	SAFE_RELEASE(m_pBrushWhite);
 	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrushWhite);
+	m_pBrushWhite->SetOpacity(0.5f);
 	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBrushBlack);
+	m_pBrushBlack->SetOpacity(0.5f);
 #endif // _DEBUG
 }
 
 void CPlayerDot::Finalize() {
 	m_pPlayer = NULL;
 	m_pParent = NULL;
-	SAFE_RELEASE(m_pImage);
+	SAFE_RELEASE(m_pDotImage);
+	SAFE_RELEASE(m_pStrawImage);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pBrushBlack);

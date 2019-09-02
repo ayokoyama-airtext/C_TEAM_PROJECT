@@ -30,7 +30,8 @@ public:
 	virtual void damage(float amount) override;
 protected:
 	CStage	*m_pParent;
-	ID2D1Bitmap	*m_pImage;
+	ID2D1Bitmap	*m_pCoreImage;
+	ID2D1Bitmap	*m_pBeltImage;
 	
 	INT		m_iTimer;
 	INT		m_iDamagedTimer;
@@ -62,13 +63,16 @@ protected:
 	//	フィールド幅高
 	FLOAT m_fFieldWidth;
 	FLOAT m_fFieldHeight;
+
+	//	テクスチャ座標
+	static float m_pTextureCoord[];
 	
 
 	//	定数
 	static const int PLAYER_START_X = 2880;
 	static const int PLAYER_START_Y = 2880;
-	static const int START_DOT_NUM = 6;
-	static const int START_MAX_DOT_NUM = 6;
+	static const int START_DOT_NUM = 3;
+	static const int START_MAX_DOT_NUM = 3;
 	static const int BELT_RAD = 96;		//	ベルト半径
 	static const int DOT_RAD = 24;			//	ドット半径
 	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ

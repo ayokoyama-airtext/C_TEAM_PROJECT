@@ -14,7 +14,9 @@
 #include "TextureLoader.h"
 
 
-#define PLAYER_FILE_NAME	_T("res\\player.png")
+#define PLAYER_FILE_NAME		_T("res\\player_core.png")
+#define PLAYER_BELT_FILE_NAME	_T("res\\belt.png")
+float CPlayer::m_pTextureCoord[] = { 0.f, 96.f, 192.f };
 const float CPlayer::ROTATION_SPEED = 0.05f;
 const float CPlayer::PLAYER_SPEED = 10.f;
 
@@ -25,7 +27,8 @@ const float CPlayer::PLAYER_SPEED = 10.f;
 CPlayer::CPlayer(CStage *pStage)
 {
 	m_pParent = pStage;
-	m_pImage = NULL;
+	m_pCoreImage = NULL;
+	m_pBeltImage = NULL;
 	m_iTimer = 0;
 	m_iDamagedTimer = 0;
 	m_iShotTimer = 0;
@@ -61,12 +64,14 @@ CPlayer::CPlayer(CStage *pStage)
 
 	ID2D1RenderTarget *pTarget = pStage->GetRenderTarget();
 	if (pTarget) {
-		//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYER_FILE_NAME, &m_pImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYER_FILE_NAME, &m_pCoreImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYER_BELT_FILE_NAME, &m_pBeltImage);
 
 #ifdef _DEBUG
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
-		m_pBrush->SetOpacity(0.75f);
+		m_pBrush->SetOpacity(0.5f);
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &m_pRedBrush);
+		m_pRedBrush->SetOpacity(0.5f);
 #endif
 
 		SAFE_RELEASE(pTarget);
@@ -76,7 +81,8 @@ CPlayer::CPlayer(CStage *pStage)
 
 CPlayer::~CPlayer()
 {
-	SAFE_RELEASE(m_pImage);
+	SAFE_RELEASE(m_pBeltImage);
+	SAFE_RELEASE(m_pCoreImage);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pRedBrush);
@@ -89,6 +95,8 @@ CPlayer::~CPlayer()
 *@brief	アニメーションメソッド
 */
 bool CPlayer::move() {
+	m_iTimer = (m_iTimer + 1) % 54;
+
 	float cos = cosf(m_fAngle);
 	float sin = sinf(m_fAngle);
 
@@ -269,7 +277,47 @@ bool CPlayer::move() {
 void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	D2D1_RECT_F rc, src;
+	D2D1_POINT_2F center;
+	center.x = m_fDrawX;
+	center.y = m_fDrawY;
 	D2D1_SIZE_F size = pRenderTarget->GetSize();
+	FLOAT angle = 180.f * (m_fAngle + PI * 0.5f) / PI;	//	ここで0.5PI 足しているのは、データ上の0度がx軸方向なのに対して、画像の0度はy軸方向なため。m_fAngleはデータ上の角度(ラジアン)である
+	int texIndex = (m_iTimer % 18) / 6;
+
+
+	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(angle, center);
+	pRenderTarget->SetTransform(rotation);	//	回転
+
+	//	Core
+	src.left = m_pTextureCoord[texIndex];
+	src.top = 0.f;
+	src.right = src.left + CORE_LENGTH;
+	src.bottom = src.top + CORE_LENGTH;
+
+	rc.left = m_fDrawX - CORE_LENGTH * 0.5f;
+	rc.right = rc.left + CORE_LENGTH;
+	rc.top = m_fDrawY - CORE_LENGTH * 0.5f;
+	rc.bottom = rc.top + CORE_LENGTH;
+
+	pRenderTarget->DrawBitmap(m_pCoreImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+
+	//	Belt
+	src.left = 0.f;
+	src.top = 0.f;
+	src.right = src.left + (BELT_RAD << 1);
+	src.bottom = src.top + (BELT_RAD << 1);
+
+	rc.left = m_fDrawX - BELT_RAD;
+	rc.right = rc.left + (BELT_RAD << 1);
+	rc.top = m_fDrawY - BELT_RAD;
+	rc.bottom = rc.top + (BELT_RAD << 1);
+	pRenderTarget->DrawBitmap(m_pBeltImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+
+	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());	//	回転クリア
+
+
 	
 #ifdef _DEBUG
 	//	ベルト
@@ -281,7 +329,6 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	pRenderTarget->DrawEllipse(el, m_pBrush);
 
 	//	ドット
-	FLOAT angle = 0;
 	/*for (int i = 0; i < m_iDotNum; ++i) {
 		angle = m_fAngle + 2.f * PI * ((FLOAT)i / (FLOAT)m_iMaxDotNum);
 		el.point.x = m_fDrawX + m_fRad * cosf(angle);
@@ -293,7 +340,6 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	//	コア
 	D2D1_POINT_2F point;
-	angle = 180.f * (m_fAngle + PI * 0.5f) / PI;
 	rc.left = m_fDrawX - CORE_LENGTH * 0.5f;
 	rc.right = rc.left + CORE_LENGTH;
 	rc.top = m_fDrawY - CORE_LENGTH * 0.5f;

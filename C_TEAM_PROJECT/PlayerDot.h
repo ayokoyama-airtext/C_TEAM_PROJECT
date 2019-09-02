@@ -34,6 +34,7 @@ protected:
 	FLOAT	m_fX;		//	x座標
 	FLOAT	m_fY;		//	y座標
 	FLOAT	m_fRad;		//	半径
+	FLOAT	m_fAngle;	//	プレイヤーに対する角度
 	INT		m_iState;	//	ドットの状態	0:壊れてる / 1:生きてる
 	INT		m_iNumber;	//	ドットの番号
 	INT		m_iTimer;
@@ -42,10 +43,12 @@ protected:
 	static const int	DEFAULT_RAD = 24;	//	デフォルト半径
 
 	//	静的メンバ(初期化を忘れずに)
-	static ID2D1Bitmap	*m_pImage;
+	static ID2D1Bitmap	*m_pDotImage;
+	static ID2D1Bitmap	*m_pStrawImage;
 	static CStage	*m_pParent;
 	static CPlayer	*m_pPlayer;
 	static int	m_iCount;	//	ドットのインスタンスの数
+	static float m_pStrawTexCoord[];	//	Strawテクスチャの座標
 #ifdef _DEBUG
 	static ID2D1SolidColorBrush	*m_pBrushBlack;
 	static ID2D1SolidColorBrush *m_pBrushWhite;

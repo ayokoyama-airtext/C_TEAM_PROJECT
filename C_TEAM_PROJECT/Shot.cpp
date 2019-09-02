@@ -61,13 +61,29 @@ void CShot::draw(ID2D1RenderTarget *pRenderTarget) {
 	float playerX = m_pParent->playerCoords.playerX;
 	float playerY = m_pParent->playerCoords.playerY;
 
+	D2D1_RECT_F rc, src;
+	D2D1_POINT_2F	center;
+	center.x = playerDrawX + (m_fX - playerX);
+	center.y = playerDrawY + (m_fY - playerY);
+
+	src.left = 0.f;
+	src.top = 0.f;
+	src.right = src.left + m_fRad * 2.f;
+	src.bottom = src.top + m_fRad * 2.f;
+
+	rc.left = center.x - m_fRad;
+	rc.right = rc.left + m_fRad * 2.f;
+	rc.top = center.y - m_fRad;
+	rc.bottom = rc.top + m_fRad * 2.f;
+
+	pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+#ifdef _DEBUG
 	D2D1_ELLIPSE el;
 	el.point.x = playerDrawX + m_fX - playerX;
 	el.point.y = playerDrawY + m_fY - playerY;
 	el.radiusX = m_fRad;
 	el.radiusY = m_fRad;
-
-#ifdef _DEBUG
 	pRenderTarget->FillEllipse(el, m_pBrush);
 #endif
 }
@@ -101,11 +117,12 @@ void CShot::Restore(CStage *pStage, CPlayer *pPlayer, ID2D1RenderTarget *pTarget
 	m_pParent = pStage;
 	m_pPlayer = pPlayer;
 	
-	//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, SHOT_FILE_NAME, &m_pImage);
+	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, SHOT_FILE_NAME, &m_pImage);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pBrush);
 	pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &m_pBrush);
+	m_pBrush->SetOpacity(0.1f);
 #endif // _DEBUG
 }
 
