@@ -27,18 +27,21 @@ protected:
 	float	m_fVX;
 	float	m_fVY;
 	float	m_fRad;
+	int		m_iLifeTimer;
+	int		m_iDestroyAnimTimer;
 
 	bool	m_bDamaged;
 
 	//	定数
 	static const int SHOT_SPEED = 20;
 	static const int DEFAULT_RAD = 24;	//	デフォルト半径
+	static const int LIFE_TIME = 60;
 
 	//	staticメンバ(初期化を忘れずに)
 	static CPlayer		*m_pPlayer;
 	static CStage		*m_pParent;
 	static ID2D1Bitmap	*m_pImage;
-
+	static ID2D1Bitmap	*m_pDestroyImage;
 #ifdef _DEBUG
 	static ID2D1SolidColorBrush	*m_pBrush;
 #endif

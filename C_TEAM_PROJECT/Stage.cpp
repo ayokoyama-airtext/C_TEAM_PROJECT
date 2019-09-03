@@ -7,6 +7,7 @@
 #include "BG.h"
 #include "EnemyManager.h"
 #include "EnemyDot.h"
+#include "EnemyBoss.h"
 #include "Shot.h"
 #include "UI.h"
 #include "TextureLoader.h"
@@ -21,6 +22,7 @@ CStage::CStage(CSelector *pSystem)
 	m_iTimer = 0;
 	m_iScore = 0;
 	m_iGameFinishState = 0;
+	m_pBoss = NULL;
 	m_ePhase = STAGE_INIT;
 
 	ID2D1RenderTarget *pTarget = pSystem->GetRenderTarget();
@@ -217,22 +219,34 @@ GameSceneResultCode CStage::move() {
 		//		当たり判定	
 		//********************************
 
+		//	Boss と　プレイヤー
+		if (m_pBoss && m_pPlayer) {
+			if (m_pBoss->collideWithPlayer(m_pPlayer)) {
+				float x = m_pBoss->GetX();
+				float y = m_pBoss->GetY();
+				float r = m_pBoss->GetRad();
+				m_pPlayer->setPos(x, y, r);
+				m_pPlayer->CalcDrawCoord(&playerCoords);
+			}
+		}
 
-		//	EnemyDot(先頭についてるのだけ)とプレイヤー&プレイヤードット
+
+		//	強EnemyDot(先頭についてるやつ + Bossのドット)とプレイヤー&プレイヤードット
 		if (m_pPlayerDots && m_pEnemyDots) {
 			std::list<IGameObject*>::iterator eIt = m_pEnemyDots->begin();
 			std::list<IGameObject*>::iterator pIt;
 			while (eIt != m_pEnemyDots->end()) {
-				if (0 == (*eIt)->GetNumber()) {
+				if (0 == (*eIt)->GetNumber() || 0 == (*eIt)->GetID()) {
 					if ((*eIt)->collide(m_pPlayer)) {
 						m_pPlayer->damage(1.0f);
 					}
 					pIt = m_pPlayerDots->begin();
 					while (pIt != m_pPlayerDots->end()) {
 						if ((*eIt)->collide(*pIt)) {
-							if (0 == (*pIt)->GetNumber()) {
+							if (playerCoords.playerIsWHmode == false) {
 								(*eIt)->damage(1.f);
 								(*eIt)->SetFlag(SET_FLG_DOT_DAMAGED);
+								(*pIt)->damage(1.f);
 							}
 							else {
 								(*pIt)->damage(1.f);
@@ -294,10 +308,12 @@ GameSceneResultCode CStage::move() {
 
 		
 
-		//	Shot と　エネミードット
-		if (m_pShots && m_pEnemyDots) {
+		//	Shot と　エネミードット/エネミーコア
+		if (m_pShots && m_pEnemyDots &&m_pEnemies) {
 			std::list<IGameObject*>::iterator sIt = m_pShots->begin();
 			std::list<IGameObject*>::iterator eIt;
+
+			//	shot and dot
 			while (sIt != m_pShots->end()) {
 				eIt = m_pEnemyDots->begin();
 				bool IsHit = false;
@@ -307,6 +323,19 @@ GameSceneResultCode CStage::move() {
 						(*eIt)->SetFlag(SET_FLG_DOT_DAMAGED);
 						(*sIt)->damage(1.f);
 						IsHit = true;
+					}
+					eIt++;
+				}
+				sIt++;
+			}
+
+			//	shot and core
+			sIt = m_pShots->begin();
+			while (sIt != m_pShots->end()) {
+				eIt = m_pEnemies->begin();
+				while (eIt != m_pEnemies->end()) {
+					if ((*eIt)->collide(*sIt)) {
+						(*sIt)->damage(1.f);
 					}
 					eIt++;
 				}

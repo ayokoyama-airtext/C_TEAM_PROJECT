@@ -156,6 +156,8 @@
     <ClInclude Include="Enemy04.h" />
     <ClInclude Include="Enemy05.h" />
     <ClInclude Include="Enemy06.h" />
+    <ClInclude Include="EnemyBoss.h" />
+    <ClInclude Include="EnemyBossDot.h" />
     <ClInclude Include="EnemyDot.h" />
     <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Explain.h" />
@@ -187,6 +189,8 @@
     <ClCompile Include="Enemy04.cpp" />
     <ClCompile Include="Enemy05.cpp" />
     <ClCompile Include="Enemy06.cpp" />
+    <ClCompile Include="EnemyBoss.cpp" />
+    <ClCompile Include="EnemyBossDot.cpp" />
     <ClCompile Include="EnemyDot.cpp" />
     <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Explain.cpp" />

@@ -78,9 +78,6 @@
     <ClInclude Include="EnemyManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="EnemyDot.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Enemy.h">
       <Filter>ENEMY</Filter>
     </ClInclude>
@@ -104,6 +101,15 @@
     </ClInclude>
     <ClInclude Include="Shot.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyBoss.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyDot.h">
+      <Filter>ENEMY</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyBossDot.h">
+      <Filter>ENEMY</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -161,9 +167,6 @@
     <ClCompile Include="EnemyManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="EnemyDot.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Enemy.cpp">
       <Filter>ENEMY</Filter>
     </ClCompile>
@@ -187,6 +190,15 @@
     </ClCompile>
     <ClCompile Include="Shot.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyBoss.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyDot.cpp">
+      <Filter>ENEMY</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyBossDot.cpp">
+      <Filter>ENEMY</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -26,8 +26,11 @@ public:
 	void DecreaseAliveDotNum();
 
 	virtual bool collide(float x, float y, float r) override;
-	virtual bool collide(IGameObject *pObj);
+	virtual bool collide(IGameObject *pObj) override;
+	virtual bool collideWithBoss(float x, float y, float r);
 	virtual void damage(float amount) override;
+
+	virtual void setPos(float x, float y, float r);
 protected:
 	CStage	*m_pParent;
 	ID2D1Bitmap	*m_pCoreImage;

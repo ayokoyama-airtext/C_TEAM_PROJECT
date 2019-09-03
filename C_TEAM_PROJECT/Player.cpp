@@ -20,7 +20,7 @@ float CPlayer::m_pTextureCoord[] = { 0.f, 96.f, 192.f };
 const float CPlayer::ROTATION_SPEED = 0.05f;
 const float CPlayer::PLAYER_SPEED = 10.f;
 
-#define DECREASE_SPEED 0.05f
+#define DECREASE_SPEED 0.075f
 #define BRAKE_SPEED	0.5f
 
 
@@ -95,6 +95,21 @@ CPlayer::~CPlayer()
 *@brief	アニメーションメソッド
 */
 bool CPlayer::move() {
+	//	ドットの残り数を確認
+	{
+		m_iDotNum = 0;
+		for (int i = 0; i < m_iMaxDotNum; ++i) {
+			if (1 == m_pDots[i]->GetState()) {
+				m_iDotNum++;
+			}
+		}
+	}
+
+	if (m_iDotNum <= 0) {
+		return false;
+	}
+
+
 	m_iTimer = (m_iTimer + 1) % 54;
 
 	float cos = cosf(m_fAngle);
@@ -282,6 +297,10 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	center.y = m_fDrawY;
 	D2D1_SIZE_F size = pRenderTarget->GetSize();
 	FLOAT angle = 180.f * (m_fAngle + PI * 0.5f) / PI;	//	ここで0.5PI 足しているのは、データ上の0度がx軸方向なのに対して、画像の0度はy軸方向なため。m_fAngleはデータ上の角度(ラジアン)である
+	float opacity = 1.0f;
+	if (m_iDamagedTimer > 0) {
+		opacity = 0.25f;
+	}
 	int texIndex = (m_iTimer % 18) / 6;
 
 
@@ -296,10 +315,20 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	rc.left = m_fDrawX - CORE_LENGTH * 0.5f;
 	rc.right = rc.left + CORE_LENGTH;
-	rc.top = m_fDrawY - CORE_LENGTH * 0.5f;
+	rc.top = m_fDrawY - CORE_LENGTH * 0.5f + 36.f;
 	rc.bottom = rc.top + CORE_LENGTH;
 
-	pRenderTarget->DrawBitmap(m_pCoreImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	pRenderTarget->DrawBitmap(m_pCoreImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+	src.left = m_pTextureCoord[2 - texIndex];
+	src.right = src.left + CORE_LENGTH;
+
+	rc.left = m_fDrawX - CORE_LENGTH * 0.25f;
+	rc.right = rc.left + CORE_LENGTH * 0.5f;
+	rc.top = m_fDrawY - CORE_LENGTH * 0.25f - 42.f;
+	rc.bottom = rc.top + CORE_LENGTH * 0.5f;
+
+	pRenderTarget->DrawBitmap(m_pCoreImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 
 
 	//	Belt
@@ -312,7 +341,7 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	rc.right = rc.left + (BELT_RAD << 1);
 	rc.top = m_fDrawY - BELT_RAD;
 	rc.bottom = rc.top + (BELT_RAD << 1);
-	pRenderTarget->DrawBitmap(m_pBeltImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 
 
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());	//	回転クリア
@@ -413,6 +442,19 @@ void CPlayer::CalcDrawCoord(PLAYER_COORDS *playerCoords) {
 
 
 /**
+*@brief		プレイヤーが押しのけられた時に位置を調整するメソッド
+*/
+void CPlayer::setPos(float x, float y, float r) {
+	float vx = m_fX - x;
+	float vy = m_fY - y;
+	float angle = atan2(vy, vx);
+
+	m_fX = x + (r + m_fRad) * cos(angle);
+	m_fY = y + (r + m_fRad) * sin(angle);
+}
+
+
+/**
 *@brief	プレイヤーの持つ生存ドット数を一つ減らす
 *@note	プレイヤードットが死んだときに呼ぶ関数
 */
@@ -436,6 +478,20 @@ bool CPlayer::collide(float x, float y, float r) {
 	float vy = m_fY - y;
 	float l2 = vx * vx + vy * vy;
 
+	float d = (FLOAT)(CORE_LENGTH >> 1) + r;
+	d *= d;
+
+	if (l2 < d)
+		return true;
+
+	return false;
+}
+
+bool CPlayer::collideWithBoss(float x, float y, float r) {
+	float vx = m_fX - x;
+	float vy = m_fY - y;
+	float l2 = vx * vx + vy * vy;
+
 	float d = m_fRad + r;
 	d *= d;
 
@@ -454,7 +510,7 @@ bool CPlayer::collide(IGameObject *pObj) {
 	if (m_iDamagedTimer > 0)
 		return false;
 
-	float x = m_fX, y = m_fY, r = m_fCoreRad;
+	float x = m_fX, y = m_fY, r = (FLOAT)(CORE_LENGTH >> 1);
 
 	return pObj->collide(x, y, r);
 }
@@ -463,18 +519,11 @@ bool CPlayer::collide(IGameObject *pObj) {
 *@brief	ダメージを受けたときの処理
 */
 void CPlayer::damage(float amount) {
-	m_iDotNum = 0;
-	for (int i = 0; i < m_iMaxDotNum; ++i) {
-		if (1 == m_pDots[i]->GetState()) {
-			m_iDotNum++;
-		}
-	}
 
 	if (m_iDotNum > 0) {
 		for (int i = m_iMaxDotNum; i > 0; --i) {
 			if (0 != m_pDots[i - 1]->GetState()) {
 				m_pDots[i - 1]->damage(1.f);
-				m_iDotNum--;
 				i = -1;
 			}
 		}

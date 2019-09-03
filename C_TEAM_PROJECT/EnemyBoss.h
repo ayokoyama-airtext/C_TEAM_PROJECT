@@ -1,9 +1,3 @@
-/**
-*@file		Enemy.h
-*@author	A.Yokoyama
-*@date		10.August.2019
-*@brief		エネミークラスの宣言
-*/
 #pragma once
 #include "IGameObject.h"
 #include <vector>
@@ -12,18 +6,20 @@ struct ID2D1Bitmap;
 struct ID2D1SolidColorBrush;
 class CStage;
 class CEnemyDot;
+class CPlayer;
 
 
-class CEnemy :
+class CEnemyBoss :
 	public IGameObject
 {
 public:
-	CEnemy(float x, float y, float scale);
-	virtual ~CEnemy();
+	CEnemyBoss(float x, float y, float scale);
+	virtual ~CEnemyBoss();
 	virtual bool move() override;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
 	virtual bool collide(float x, float y, float r) override;
 	virtual bool collide(IGameObject *pObj) override;
+	virtual bool collideWithPlayer(CPlayer *pPlayer);
 	virtual void damage(float amount) override;
 
 	virtual float GetX() override;
@@ -65,9 +61,9 @@ protected:
 	static const int EFLAG_ATTACKED = 0x10;	//	攻撃後の待ち
 
 	//	定数
-	static const int BELT_RAD = 96;				//	ベルト半径
+	static const int BELT_RAD = 720;				//	ベルト半径
 	static const int DOT_RAD = 24;				//	ドット半径
-	static const int CORE_LENGTH = 96;			//	コアの一辺の長さ
+	static const int CORE_LENGTH = 960;			//	コアの一辺の長さ
 	static const float ROTATION_SPEED;			//	回転速度
 	static const float ENEMY_SPEED;				//	移動速度
 	static const float ENEMY_ESCAPE_SPEED;		//	逃走速度
@@ -94,5 +90,5 @@ protected:
 	static ID2D1SolidColorBrush	*m_pBrush;
 	static ID2D1SolidColorBrush	*m_pRedBrush;
 #endif // _DEBUG
-};
 
+};

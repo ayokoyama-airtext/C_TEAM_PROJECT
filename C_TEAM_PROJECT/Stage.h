@@ -44,6 +44,7 @@ typedef struct {
 class CPlayer;
 class CBG;
 class CEnemyManager;
+class CEnemyBoss;
 class CUI;
 struct ID2D1SolidColorBrush;
 
@@ -63,6 +64,9 @@ public:
 	virtual int GetScore();
 	virtual int GetTimer();
 
+	virtual void SetBoss(CEnemyBoss *pBoss) { m_pBoss = pBoss; }
+	virtual void RemoveBoss() { m_pBoss = NULL; }
+
 	ID2D1RenderTarget *GetRenderTarget();
 
 	//	ŒöŠJƒƒ“ƒo•Ï”
@@ -75,6 +79,7 @@ protected:
 	ID2D1SolidColorBrush	*m_pBlackBrush;
 	CSelector		*m_pSystem;
 	CPlayer			*m_pPlayer;
+	CEnemyBoss		*m_pBoss;
 	CBG				*m_pBG;
 	CEnemyManager	*m_pEnemyManager;
 	CUI				*m_pUI;

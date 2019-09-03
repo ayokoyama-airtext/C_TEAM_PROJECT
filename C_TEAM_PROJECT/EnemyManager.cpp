@@ -13,6 +13,7 @@
 #include "Enemy04.h"
 #include "Enemy05.h"
 #include "Enemy06.h"
+#include "EnemyBoss.h"
 
 
 
@@ -98,6 +99,10 @@ IGameObject *CEnemyManager::CreateEnemy() {
 		case 6:
 			pObj = new CEnemy06(RespawnX, RespawnY, 1.f);
 			break;
+
+		case 100:
+			pObj = new CEnemyBoss(RespawnX, RespawnY, 1.f);
+			break;
 		}
 		m_iRespawnNum++;
 		if (m_iIndex == m_szEnemySetDataSize) {
@@ -154,13 +159,14 @@ void CEnemyManager::Restore(ID2D1RenderTarget *pTarget) {
 	CEnemy04::Restore(pTarget, m_pParent);
 	CEnemy05::Restore(pTarget, m_pParent);
 	CEnemy06::Restore(pTarget, m_pParent);
-	
+	CEnemyBoss::Restore(pTarget, m_pParent);
 }
 
 /**
 *@brief	管理しているすべてのエネミーのFinalizeを行う
 */
 void CEnemyManager::Finalize() {
+	CEnemyBoss::Finalize();
 	CEnemy06::Finalize();
 	CEnemy05::Finalize();
 	CEnemy04::Finalize();
@@ -177,9 +183,10 @@ void CEnemyManager::DecreaseEnemyCount() {
 }
 
 
-//	PITCH : 2 -> Wave番号, エネミー種類(999はランダムリスポーン)
+//	PITCH : 2 -> Wave番号, エネミー種類(999:ランダムリスポーン, 100:Boss)
 SHORT CEnemyManager::m_pEnemySetData[] = {
-	0, 1,
+	0, 100,
+	/*0, 1,
 	0, 1,
 	0, 1,
 	1, 1,
@@ -187,7 +194,7 @@ SHORT CEnemyManager::m_pEnemySetData[] = {
 	1, 1,
 	2, 1,
 	2, 1,
-	2, 999,
+	2, 999,*/
 };
 
 size_t CEnemyManager::m_szEnemySetDataSize = sizeof(CEnemyManager::m_pEnemySetData) / sizeof(SHORT);

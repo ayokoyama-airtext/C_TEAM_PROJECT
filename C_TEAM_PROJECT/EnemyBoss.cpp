@@ -8,37 +8,38 @@
 #include <cmath>
 #include <time.h>
 #include "Stage.h"
-#include "Enemy.h"
-#include "EnemyDot.h"
+#include "EnemyBoss.h"
+#include "EnemyBossDot.h"
+#include "Player.h"
 #include "TextureLoader.h"
 
 
-#define ENEMY_FILE_NAME	_T("res\\enemy_core.png")
-#define BELT_FILE_NAME	_T("res\\belt.png")
-const float CEnemy::ROTATION_SPEED = 0.025f;
-const float CEnemy::ENEMY_SPEED = 5.f;
-const float CEnemy::ENEMY_ESCAPE_SPEED = 8.f;
-const float CEnemy::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
-const float CEnemy::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
-const float CEnemy::SEARCH_ANGLE = cosf(PI * 0.5f);
+#define ENEMY_FILE_NAME	_T("res\\boss_core.png")
+#define BELT_FILE_NAME	_T("res\\boss_belt.png")
+const float CEnemyBoss::ROTATION_SPEED = 0.005f;
+const float CEnemyBoss::ENEMY_SPEED = 1.5f;
+const float CEnemyBoss::ENEMY_ESCAPE_SPEED = 8.f;
+const float CEnemyBoss::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
+const float CEnemyBoss::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
+const float CEnemyBoss::SEARCH_ANGLE = cosf(PI * 0.5f);
 
 
-FLOAT CEnemy::m_pRandomMove[] = { 0.f, -1.f, 1.f, -1.f, 1.f };
-FLOAT CEnemy::m_pTexCoord[] = { 0.f, 96.f, 192.f };
-const INT CEnemy::m_iRandomMoveSize = _countof(CEnemy::m_pRandomMove);
-FLOAT CEnemy::m_fFieldWidth = 0.f;
-FLOAT CEnemy::m_fFieldHeight = 0.f;
-ID2D1Bitmap *CEnemy::m_pCoreImage = NULL;
-ID2D1Bitmap *CEnemy::m_pBeltImage = NULL;
-CStage *CEnemy::m_pParent = NULL;
+FLOAT CEnemyBoss::m_pRandomMove[] = { 0.f, -1.f, 1.f, -1.f, 1.f };
+FLOAT CEnemyBoss::m_pTexCoord[] = { 0.f, 480.f, 960.f };
+const INT CEnemyBoss::m_iRandomMoveSize = _countof(CEnemyBoss::m_pRandomMove);
+FLOAT CEnemyBoss::m_fFieldWidth = 0.f;
+FLOAT CEnemyBoss::m_fFieldHeight = 0.f;
+ID2D1Bitmap *CEnemyBoss::m_pCoreImage = NULL;
+ID2D1Bitmap *CEnemyBoss::m_pBeltImage = NULL;
+CStage *CEnemyBoss::m_pParent = NULL;
 #ifdef _DEBUG
-ID2D1SolidColorBrush *CEnemy::m_pBrush = NULL;
-ID2D1SolidColorBrush *CEnemy::m_pRedBrush = NULL;
+ID2D1SolidColorBrush *CEnemyBoss::m_pBrush = NULL;
+ID2D1SolidColorBrush *CEnemyBoss::m_pRedBrush = NULL;
 #endif // _DEBUG
 
 
 
-CEnemy::CEnemy(float x, float y, float scale)
+CEnemyBoss::CEnemyBoss(float x, float y, float scale)
 {
 	m_fX = x;
 	m_fY = y;
@@ -47,7 +48,7 @@ CEnemy::CEnemy(float x, float y, float scale)
 	m_fRad = BELT_RAD;
 	m_fCoreRad = (FLOAT)(CORE_LENGTH >> 1);
 	m_fScale = scale;
-	m_iMaxDotNum = 5;
+	m_iMaxDotNum = 24;
 	m_iDotNum = m_iMaxDotNum;
 	m_fAngle = PI * 0.5f;
 	m_iRandomMoveIndex = 0;
@@ -55,8 +56,8 @@ CEnemy::CEnemy(float x, float y, float scale)
 
 
 	for (int i = 0; i < m_iMaxDotNum; ++i) {
-		CEnemyDot *pObj = NULL;
-		pObj = new CEnemyDot(this, i, m_iMaxDotNum);
+		CEnemyBossDot *pObj = NULL;
+		pObj = new CEnemyBossDot(this, i, m_iMaxDotNum);
 		if (pObj) {
 			m_pDots.push_back(pObj);
 			m_pParent->AddEnemyDot(pObj);
@@ -69,18 +70,21 @@ CEnemy::CEnemy(float x, float y, float scale)
 	m_iAnimationTimer = 0;
 	m_iDamagedTimer = 0;
 	m_bDamaged = false;
+
+	m_pParent->SetBoss(this);
 }
 
 
-CEnemy::~CEnemy()
+CEnemyBoss::~CEnemyBoss()
 {
+	m_pParent->RemoveBoss();
 }
 
 
 /**
 *@brief	アニメーションメソッド
 */
-bool CEnemy::move() {
+bool CEnemyBoss::move() {
 	if (m_bDamaged) {
 		if (m_iDotNum > 0) {
 			for (int i = 0; i < m_iDotNum; ++i) {
@@ -134,85 +138,85 @@ bool CEnemy::move() {
 		break;
 
 	case EFLAG_SEARCH:	//	索敵
-		{
-			//	プレイヤーとの角度を計算
-			float l = sqrtf(vx * vx + vy * vy);
-			float cos = (dirVX * vx + dirVY * dirVY) / l;
-			if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
-				if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
-					m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
-					m_iTimer = 0;
-					break;
-				}
-			}
-
-			if (m_iTimer == 0) {
-				m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
-				m_iTimer = 180;
-			}
-			//	進行方向を変更
-			m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
-			//	進行方向へ加速
-			m_fVX = ENEMY_SPEED * dirVX;
-			m_fVY = ENEMY_SPEED * dirVY;
-			m_iTimer--;
-		}
-
-		break;
-
-	case EFLAG_CHASE:
-		{
-			float l = sqrtf(vx * vx + vy * vy);
-
-			//	離れすぎたら追跡中止
-			if (l > MAX_CHASE_LENGTH) {
-				if (m_iTimer++ <= ATTACKED_DURATION) {
-					float speedDecline = 0.5f * (FLOAT)(ATTACKED_DURATION - m_iTimer) / (FLOAT)ATTACKED_DURATION;
-					m_fVX = dirVX * ENEMY_SPEED * speedDecline;
-					m_fVY = dirVY * ENEMY_SPEED * speedDecline;
-				}
-				else {
-					m_iTimer = 0;
-					m_iBehaviorFlag = EFLAG_SEARCH;
-				}
+	{
+		//	プレイヤーとの角度を計算
+		float l = sqrtf(vx * vx + vy * vy);
+		float cos = (dirVX * vx + dirVY * dirVY) / l;
+		if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
+			if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
+				m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
+				m_iTimer = 0;
 				break;
 			}
+		}
 
-			m_iTimer = 0;
-			l = 1.0f / l;
-			float sin = (dirVX * vy - dirVY * vx);
-			float cos = (dirVX * vx + dirVY * vy) * l;
-			if (sin > 0) {	//	プレイヤーは進行方向右側
-				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
-					m_fVX = vx * l;
-					m_fVY = vy * l;
-					m_fAngle = atan2(m_fVY, m_fVX);
-					m_fVX *= ENEMY_SPEED;
-					m_fVY *= ENEMY_SPEED;
-				}
-				else {
-					m_fVX = dirVX * ENEMY_SPEED;
-					m_fVY = dirVY * ENEMY_SPEED;
-					m_fAngle += ROTATION_SPEED;
-				}
+		if (m_iTimer == 0) {
+			m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
+			m_iTimer = 180;
+		}
+		//	進行方向を変更
+		m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
+		//	進行方向へ加速
+		m_fVX = ENEMY_SPEED * dirVX;
+		m_fVY = ENEMY_SPEED * dirVY;
+		m_iTimer--;
+	}
+
+	break;
+
+	case EFLAG_CHASE:
+	{
+		float l = sqrtf(vx * vx + vy * vy);
+
+		//	離れすぎたら追跡中止
+		if (l > MAX_CHASE_LENGTH) {
+			if (m_iTimer++ <= ATTACKED_DURATION) {
+				float speedDecline = 0.5f * (FLOAT)(ATTACKED_DURATION - m_iTimer) / (FLOAT)ATTACKED_DURATION;
+				m_fVX = dirVX * ENEMY_SPEED * speedDecline;
+				m_fVY = dirVY * ENEMY_SPEED * speedDecline;
 			}
-			else {	//	プレイヤーは進行方向左側
-				if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
-					m_fVX = vx * l;
-					m_fVY = vy * l;
-					m_fAngle = atan2(m_fVY, m_fVX);
-					m_fVX *= ENEMY_SPEED;
-					m_fVY *= ENEMY_SPEED;
-				}
-				else {
-					m_fVX = dirVX * ENEMY_SPEED;
-					m_fVY = dirVY * ENEMY_SPEED;
-					m_fAngle -= ROTATION_SPEED;
-				}
+			else {
+				m_iTimer = 0;
+				m_iBehaviorFlag = EFLAG_SEARCH;
+			}
+			break;
+		}
+
+		m_iTimer = 0;
+		l = 1.0f / l;
+		float sin = (dirVX * vy - dirVY * vx);
+		float cos = (dirVX * vx + dirVY * vy) * l;
+		if (sin > 0) {	//	プレイヤーは進行方向右側
+			if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+				m_fVX = vx * l;
+				m_fVY = vy * l;
+				m_fAngle = atan2(m_fVY, m_fVX);
+				m_fVX *= ENEMY_SPEED;
+				m_fVY *= ENEMY_SPEED;
+			}
+			else {
+				m_fVX = dirVX * ENEMY_SPEED;
+				m_fVY = dirVY * ENEMY_SPEED;
+				m_fAngle += ROTATION_SPEED;
 			}
 		}
-		
-		break;
+		else {	//	プレイヤーは進行方向左側
+			if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+				m_fVX = vx * l;
+				m_fVY = vy * l;
+				m_fAngle = atan2(m_fVY, m_fVX);
+				m_fVX *= ENEMY_SPEED;
+				m_fVY *= ENEMY_SPEED;
+			}
+			else {
+				m_fVX = dirVX * ENEMY_SPEED;
+				m_fVY = dirVY * ENEMY_SPEED;
+				m_fAngle -= ROTATION_SPEED;
+			}
+		}
+	}
+
+	break;
 
 	case EFLAG_ESCAPE:	//	ダメージを受けると一定時間逃げる
 		if (m_iDamagedTimer > 0)
@@ -254,7 +258,7 @@ bool CEnemy::move() {
 		break;
 	}
 
-	
+
 	m_fX += m_fVX;
 	m_fY += m_fVY;
 
@@ -267,17 +271,17 @@ bool CEnemy::move() {
 
 
 	//	フィールド範囲から出ないように調整
-	if (m_fX < m_fRad) {
-		m_fX = m_fRad;
+	if (m_fX < m_fRad * 1.5f) {
+		m_fX = m_fRad * 1.5f;
 	}
-	else if (m_fX > m_fFieldWidth - m_fRad) {
-		m_fX = m_fFieldWidth - m_fRad;
+	else if (m_fX > m_fFieldWidth - m_fRad * 1.5f) {
+		m_fX = m_fFieldWidth - m_fRad * 1.5f;
 	}
-	if (m_fY < m_fRad) {
-		m_fY = m_fRad;
+	if (m_fY < m_fRad * 1.5f) {
+		m_fY = m_fRad * 1.5f;
 	}
-	else if (m_fY > m_fFieldHeight - m_fRad) {
-		m_fY = m_fFieldHeight - m_fRad;
+	else if (m_fY > m_fFieldHeight - m_fRad * 1.5f) {
+		m_fY = m_fFieldHeight - m_fRad * 1.5f;
 	}
 
 	return true;
@@ -287,7 +291,7 @@ bool CEnemy::move() {
 /**
 *@brief	描画メソッド
 */
-void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
+void CEnemyBoss::draw(ID2D1RenderTarget *pRenderTarget) {
 	float playerX = m_pParent->playerCoords.playerX;
 	float playerY = m_pParent->playerCoords.playerY;
 	float playerDrawX = m_pParent->playerCoords.playerDrawX;
@@ -307,12 +311,12 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(angle, center);
 	pRenderTarget->SetTransform(rotation);
-	
+
 	//	Core
 	src.left = m_pTexCoord[texIndex];
 	src.top = 0.f;
-	src.right = src.left + CORE_LENGTH;
-	src.bottom = src.top + CORE_LENGTH;
+	src.right = src.left + 480.f;
+	src.bottom = src.top + 480.f;
 
 	rc.left = center.x - CORE_LENGTH * 0.5f;
 	rc.right = rc.left + CORE_LENGTH;
@@ -332,7 +336,7 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 	rc.top = center.y - BELT_RAD;
 	rc.bottom = rc.top + (BELT_RAD << 1);
 
-	pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
 
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
@@ -385,15 +389,22 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 *@param [in] r	対象の半径
 *@return	true 当たり / false 外れ
 */
-bool CEnemy::collide(float x, float y, float r) {
+bool CEnemyBoss::collide(float x, float y, float r) {
 	if (m_iDamagedTimer > 0)
 		return false;
 
 	float vx = m_fX - x;
 	float vy = m_fY - y;
 	float l2 = vx * vx + vy * vy;
+	float d;
 
-	float d = m_fRad + r;
+	if (m_iDotNum > 0) {
+		d = m_fRad + r;
+	}
+	else {
+		d = m_fCoreRad + r;
+	}
+
 	d *= d;
 
 	if (l2 < d)
@@ -408,23 +419,39 @@ bool CEnemy::collide(float x, float y, float r) {
 *@param [in] pObj	相手オブジェクト
 *@return	true 当たり / false 外れ
 */
-bool CEnemy::collide(IGameObject *pObj) {
+bool CEnemyBoss::collide(IGameObject *pObj) {
 	if (m_iDamagedTimer > 0)
 		return false;
 
-	float x = m_fX, y = m_fY, r = m_fCoreRad;
+	float x = m_fX, y = m_fY, r;
+
+	if (m_iDotNum > 0) {
+		r = m_fRad;
+	}
+	else {
+		r = m_fCoreRad;
+	}
 
 	return pObj->collide(x, y, r);
 }
 
 
-void CEnemy::damage(float amount) {
+bool CEnemyBoss::collideWithPlayer(CPlayer *pPlayer) {
 	if (m_iDotNum > 0) {
-		m_pDots[--m_iDotNum]->SetStateZero();
+		return pPlayer->collideWithBoss(m_fX, m_fY, m_fRad);
+	}
+	else {
+		return false;
+	}
+}
+
+void CEnemyBoss::damage(float amount) {
+	if (m_iDotNum > 0) {
+		/*m_pDots[--m_iDotNum]->SetStateZero();
 		m_pDots.pop_back();
 		m_iBehaviorFlag = EFLAG_ESCAPE;
 		m_iDamagedTimer = DAMAGED_DURATION;
-		m_iTimer = 0;
+		m_iTimer = 0;*/
 	}
 	else {
 		m_bDamaged = true;
@@ -434,25 +461,25 @@ void CEnemy::damage(float amount) {
 /**
 *@brief	X座標を返す
 */
-float CEnemy::GetX() {
+float CEnemyBoss::GetX() {
 	return m_fX;
 }
 /**
 *@brief	Y座標を返す
 */
-float CEnemy::GetY() {
+float CEnemyBoss::GetY() {
 	return m_fY;
 }
 /**
 *@brief	Radを返す
 */
-float CEnemy::GetRad() {
+float CEnemyBoss::GetRad() {
 	return m_fRad;
 }
 /**
 *@brief	Angleを返す
 */
-float CEnemy::GetAngle() {
+float CEnemyBoss::GetAngle() {
 	return m_fAngle;
 }
 
@@ -461,7 +488,7 @@ float CEnemy::GetAngle() {
 *@note	flag 1: 攻撃命中
 *			 2: ドットがダメージを受けた
 */
-void CEnemy::SetFlag(int flag) {
+void CEnemyBoss::SetFlag(int flag) {
 
 	switch (flag) {
 	case 1:
@@ -469,10 +496,6 @@ void CEnemy::SetFlag(int flag) {
 		m_iBehaviorFlag = EFLAG_ATTACKED;
 		break;
 	case 2:
-		if (m_iBehaviorFlag != EFLAG_ESCAPE) {
-			m_iTimer = 0;
-			m_iBehaviorFlag = EFLAG_ESCAPE;
-		}
 		break;
 	default:
 		break;
@@ -483,7 +506,7 @@ void CEnemy::SetFlag(int flag) {
 /**
 *@brief	クラスで共有するリソースを生成する
 */
-void CEnemy::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
+void CEnemyBoss::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
 	SAFE_RELEASE(m_pCoreImage);
 	SAFE_RELEASE(m_pBeltImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, ENEMY_FILE_NAME, &m_pCoreImage);
@@ -506,7 +529,7 @@ void CEnemy::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
 /**
 *@brief	クラスで共有するリソースを破棄する
 */
-void CEnemy::Finalize() {
+void CEnemyBoss::Finalize() {
 	m_pParent = NULL;
 	SAFE_RELEASE(m_pCoreImage);
 	SAFE_RELEASE(m_pBeltImage);
