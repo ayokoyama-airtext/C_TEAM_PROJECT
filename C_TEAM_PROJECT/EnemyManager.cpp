@@ -55,13 +55,14 @@ IGameObject *CEnemyManager::CreateEnemy() {
 
 	int waveNum = m_pEnemySetData[m_iIndex++] &65535;
 	int enemyID = m_pEnemySetData[m_iIndex++] &65535;
+	int dotNum  = m_pEnemySetData[m_iIndex++] &65535;
 
 	if (waveNum == m_iWave) {
 		float playerX = m_pParent->playerCoords.playerX;
 		float playerY = m_pParent->playerCoords.playerY;
 
 		if (enemyID == 999) {
-			enemyID = ((rand() >> 4) % 6) + 1;
+			enemyID = ((rand() >> 4) % 2) + 1;
 		}
 
 		float RespawnX = playerX + (-1080 + 1080 * (m_iRespawnNum % 3));
@@ -82,7 +83,7 @@ IGameObject *CEnemyManager::CreateEnemy() {
 
 		switch (enemyID) {
 		case 1:
-			pObj = new CEnemy(RespawnX, RespawnY, 1.f);
+			pObj = new CEnemy(RespawnX, RespawnY, 1.f, dotNum);
 			break;
 		case 2:
 			pObj = new CEnemy02(RespawnX, RespawnY, 1.f);
@@ -183,18 +184,18 @@ void CEnemyManager::DecreaseEnemyCount() {
 }
 
 
-//	PITCH : 2 -> Wave番号, エネミー種類(999:ランダムリスポーン, 100:Boss)
+//	PITCH : 2 -> Wave番号, エネミー種類(100:Boss), ドット数
 SHORT CEnemyManager::m_pEnemySetData[] = {
-	0, 100,
-	/*0, 1,
-	0, 1,
-	0, 1,
-	1, 1,
-	1, 1,
-	1, 1,
-	2, 1,
-	2, 1,
-	2, 999,*/
+	/*0, 1, 5,
+	0, 1, 1,
+	0, 1, 1,
+	1, 1, 2,
+	1, 1, 2,
+	1, 1, 2,
+	2, 1, 2,
+	2, 1, 3,
+	2, 1, 4,*/
+	0, 100, 0,
 };
 
 size_t CEnemyManager::m_szEnemySetDataSize = sizeof(CEnemyManager::m_pEnemySetData) / sizeof(SHORT);

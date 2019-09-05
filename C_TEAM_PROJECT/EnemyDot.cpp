@@ -37,8 +37,14 @@ CEnemyDot::CEnemyDot(IGameObject *pParentEnemy, int dotNum, int maxDotNum)
 	m_iMaxDotNum = maxDotNum;
 	m_iState = 1;
 	m_iTimer = 0;
+	m_iRespawnAnimTimer = 24;
 	m_iDestroyAnimTimer = 12;
-	m_iID = 1;
+	if (m_iNumber == 0) {
+		m_iID = 0;
+	}
+	else {
+		m_iID = 1;
+	}
 	m_fAngle = (m_pParent->GetAngle()) + 2.f * PI * ((FLOAT)m_iNumber / (FLOAT)m_iMaxDotNum);
 	m_bDamaged = false;
 }
@@ -53,8 +59,16 @@ bool CEnemyDot::move() {
 	if (m_bDamaged)
 		m_iDestroyAnimTimer--;
 
-	if (!m_iState && m_iDestroyAnimTimer < 0)
-		return false;
+	if (!m_iState) {
+		if (m_iDestroyAnimTimer >= 0)
+			return true;
+		else
+			return false;
+	}
+
+	if (m_iRespawnAnimTimer >= 0) {
+		m_iRespawnAnimTimer--;
+	}
 
 	m_iTimer++;
 
@@ -86,6 +100,29 @@ void CEnemyDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	float degreeAngle = 180.f * (m_fAngle + PI * 0.5f) / PI;
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(degreeAngle, center);
 	pRenderTarget->SetTransform(rotation);
+
+	//	ƒŠƒXƒ|[ƒ“animation
+	if (m_iRespawnAnimTimer >= 0) {
+		if (m_iRespawnAnimTimer > 11) {
+			pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+			return;
+		}
+
+		int index = (11 - m_iRespawnAnimTimer) >> 2;
+		src.left = 96.f * (2 -index);
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = center.x - 48.f;
+		rc.right = rc.left + 96.f;
+		rc.top = center.y - 48.f;
+		rc.bottom = rc.top + 96.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
 
 	//	destroy animation
 	if (m_bDamaged) {
@@ -119,7 +156,7 @@ void CEnemyDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	pRenderTarget->DrawBitmap(m_pDotImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 
 	//	Straw
-	if (m_iNumber == 0) {
+	if (m_iID == 0) {
 		int texIndex = (m_iTimer % 24) / 6;
 
 		src.left = m_pStrawTexCoord[texIndex];
@@ -216,6 +253,7 @@ bool CEnemyDot::IsDead() {
 */
 void CEnemyDot::SetStateZero() {
 	m_iState = 0;
+	m_bDamaged = true;
 }
 
 int CEnemyDot::GetState() {

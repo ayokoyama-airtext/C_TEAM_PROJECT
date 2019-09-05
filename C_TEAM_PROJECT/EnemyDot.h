@@ -44,6 +44,7 @@ protected:
 	INT		m_iMaxDotNum;	//	所属しているエネミーの最大ドット数
 	INT		m_iTimer;		//	アニメーションに使用
 	INT		m_iDestroyAnimTimer;
+	INT		m_iRespawnAnimTimer;
 	INT		m_iID;			//	BossDot == 0	/	NormalDot == 1
 	bool	m_bDamaged;		//	親エネミーがドットの生死判定に使用
 

@@ -1,3 +1,8 @@
+/**
+*@file		Shot.cpp
+*@author	A.Yokoyama
+*@brief		ShotƒNƒ‰ƒX‚ÌŽÀ‘•
+*/
 #include "stdafx.h"
 #include <d2d1.h>
 #include "Stage.h"

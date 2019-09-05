@@ -1,6 +1,7 @@
 /**
 * @file Stage.h
-* @brief クラス CStage の宣言
+* @brief クラスCStageの宣言ファイル
+* @author A.Yokoyama
 */
 #pragma once
 #include "Selector.h"
@@ -60,6 +61,7 @@ public:
 	virtual void AddPlayerDot(IGameObject *pObj);
 	virtual void AddEnemyDot(IGameObject *pObj);
 	virtual void AddShot(IGameObject *pObj);
+	virtual void AddBullet(IGameObject *pObj);
 
 	virtual int GetScore();
 	virtual int GetTimer();
@@ -89,6 +91,7 @@ protected:
 	std::list<IGameObject*>		*m_pEnemies;
 	std::list<IGameObject*>		*m_pEnemyDots;
 	std::list<IGameObject*>		*m_pShots;
+	std::list<IGameObject*>		*m_pBullets;
 
 	UINT		m_iScore;
 	UINT		m_iTimer;	//	時間制限用

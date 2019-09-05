@@ -28,6 +28,8 @@ public:
 	virtual float GetY() override;
 	virtual int GetNumber() override { return m_iNumber; }
 
+	virtual void ReviveDot();
+
 	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage, CPlayer *pPlayer);
 	static void Finalize();
 protected:
@@ -38,6 +40,7 @@ protected:
 	INT		m_iState;	//	ドットの状態	0:壊れてる / 1:生きてる
 	INT		m_iNumber;	//	ドットの番号
 	INT		m_iTimer;
+	INT		m_iDestroyAnimTimer;
 
 	//	定数
 	static const int	DEFAULT_RAD = 24;	//	デフォルト半径
@@ -45,6 +48,7 @@ protected:
 	//	静的メンバ(初期化を忘れずに)
 	static ID2D1Bitmap	*m_pDotImage;
 	static ID2D1Bitmap	*m_pStrawImage;
+	static ID2D1Bitmap	*m_pDestroyImage;
 	static CStage	*m_pParent;
 	static CPlayer	*m_pPlayer;
 	static int	m_iCount;	//	ドットのインスタンスの数

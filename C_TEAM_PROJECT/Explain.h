@@ -1,3 +1,9 @@
+/**
+* @file Explain.h
+* @brief クラスCExplainの宣言ファイル
+* @author A.Yokoyama
+*/
+
 #pragma once
 #include "IGameScene.h"
 

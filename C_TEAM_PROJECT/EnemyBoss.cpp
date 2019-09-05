@@ -1,7 +1,7 @@
 /**
-*@file		Enemy.cpp
+*@file		EnemyBoss.cpp
 *@author	A.Yokoyama
-*@brief		エネミークラスの実装
+*@brief		エネミーBossクラスの実装
 */
 #include "stdafx.h"
 #include <d2d1.h>
@@ -11,17 +11,22 @@
 #include "EnemyBoss.h"
 #include "EnemyBossDot.h"
 #include "Player.h"
+#include "Bullet.h"
 #include "TextureLoader.h"
 
 
 #define ENEMY_FILE_NAME	_T("res\\boss_core.png")
 #define BELT_FILE_NAME	_T("res\\boss_belt.png")
+#define ENEMY_DEST_FILE_NAME	_T("res\\enemy_destroy.png")
+
 const float CEnemyBoss::ROTATION_SPEED = 0.005f;
 const float CEnemyBoss::ENEMY_SPEED = 1.5f;
 const float CEnemyBoss::ENEMY_ESCAPE_SPEED = 8.f;
 const float CEnemyBoss::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
 const float CEnemyBoss::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
 const float CEnemyBoss::SEARCH_ANGLE = cosf(PI * 0.5f);
+const float CEnemyBoss::BULLET_ANGLE_GAP_BIG = PI / 6.f;
+const float CEnemyBoss::BULLET_ANGLE_GAP_SMALL = PI / 24.f;
 
 
 FLOAT CEnemyBoss::m_pRandomMove[] = { 0.f, -1.f, 1.f, -1.f, 1.f };
@@ -31,6 +36,7 @@ FLOAT CEnemyBoss::m_fFieldWidth = 0.f;
 FLOAT CEnemyBoss::m_fFieldHeight = 0.f;
 ID2D1Bitmap *CEnemyBoss::m_pCoreImage = NULL;
 ID2D1Bitmap *CEnemyBoss::m_pBeltImage = NULL;
+ID2D1Bitmap *CEnemyBoss::m_pDestroyImage = NULL;
 CStage *CEnemyBoss::m_pParent = NULL;
 #ifdef _DEBUG
 ID2D1SolidColorBrush *CEnemyBoss::m_pBrush = NULL;
@@ -69,6 +75,9 @@ CEnemyBoss::CEnemyBoss(float x, float y, float scale)
 	m_iTimer = 0;
 	m_iAnimationTimer = 0;
 	m_iDamagedTimer = 0;
+	m_iAttackTimer = 0;
+	m_iDestroyAnimTimer = 24;
+	m_iRespawnAnimTimer = 24;
 	m_bDamaged = false;
 
 	m_pParent->SetBoss(this);
@@ -85,21 +94,32 @@ CEnemyBoss::~CEnemyBoss()
 *@brief	アニメーションメソッド
 */
 bool CEnemyBoss::move() {
+	//	m_bDamaged == true なら ドットが残っていたらStateを0に設定してからfalse を返す
 	if (m_bDamaged) {
 		if (m_iDotNum > 0) {
 			for (int i = 0; i < m_iDotNum; ++i) {
 				m_pDots[i]->SetStateZero();
 			}
+			m_iDotNum = 0;
 		}
-		return false;
+
+		if (--m_iDestroyAnimTimer >= 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+
 	}
 
+	//	ドットが死んでいたらStateを0にして、管理から外す
 	for (int i = 0; i < m_iDotNum; ++i) {
 		if (m_pDots[i]->IsDead()) {
 			m_pDots[i]->SetStateZero();
 			m_pDots[i] = m_pDots.back();
 			m_pDots.pop_back();
 			m_iDotNum--;
+			i--;
 		}
 	}
 
@@ -129,60 +149,28 @@ bool CEnemyBoss::move() {
 	case EFLAG_IDLE:	//	待機
 		m_fVX = 0;
 		m_fVY = 0;
+		if (m_iRespawnAnimTimer >= 0) {
+			m_iRespawnAnimTimer--;
+		}
 		m_iTimer++;
-		if (m_iTimer < 120)
+		if (m_iTimer < 60)
 			break;
 
-		m_iBehaviorFlag = EFLAG_SEARCH;
+		m_iBehaviorFlag = EFLAG_CHASE;
 		m_iTimer = 0;
 		break;
 
-	case EFLAG_SEARCH:	//	索敵
+	case EFLAG_CHASE:	//	一定距離以上離れてたら近寄る
 	{
 		//	プレイヤーとの角度を計算
 		float l = sqrtf(vx * vx + vy * vy);
-		float cos = (dirVX * vx + dirVY * dirVY) / l;
-		if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
-			if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
-				m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
-				m_iTimer = 0;
-				break;
-			}
-		}
-
-		if (m_iTimer == 0) {
-			m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
-			m_iTimer = 180;
-		}
-		//	進行方向を変更
-		m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
-		//	進行方向へ加速
-		m_fVX = ENEMY_SPEED * dirVX;
-		m_fVY = ENEMY_SPEED * dirVY;
-		m_iTimer--;
-	}
-
-	break;
-
-	case EFLAG_CHASE:
-	{
-		float l = sqrtf(vx * vx + vy * vy);
-
-		//	離れすぎたら追跡中止
-		if (l > MAX_CHASE_LENGTH) {
-			if (m_iTimer++ <= ATTACKED_DURATION) {
-				float speedDecline = 0.5f * (FLOAT)(ATTACKED_DURATION - m_iTimer) / (FLOAT)ATTACKED_DURATION;
-				m_fVX = dirVX * ENEMY_SPEED * speedDecline;
-				m_fVY = dirVY * ENEMY_SPEED * speedDecline;
-			}
-			else {
-				m_iTimer = 0;
-				m_iBehaviorFlag = EFLAG_SEARCH;
-			}
+		if (l <= (FLOAT)APPROACH_LENGTH) {	//	攻撃距離内なら
+			m_iTimer = MOVE_DURATION;
+			m_iBehaviorFlag = EFLAG_MOVE;	//	攻撃行動
 			break;
 		}
 
-		m_iTimer = 0;
+		//	プレイヤー方向へ移動
 		l = 1.0f / l;
 		float sin = (dirVX * vy - dirVY * vx);
 		float cos = (dirVX * vx + dirVY * vy) * l;
@@ -214,49 +202,112 @@ bool CEnemyBoss::move() {
 				m_fAngle -= ROTATION_SPEED;
 			}
 		}
+
+		
 	}
 
 	break;
 
-	case EFLAG_ESCAPE:	//	ダメージを受けると一定時間逃げる
-		if (m_iDamagedTimer > 0)
-			m_iDamagedTimer--;
-		if (m_iTimer++ > ESCAPE_DURATION) {
-			m_iBehaviorFlag = EFLAG_SEARCH;
+	case EFLAG_MOVE:
+	{
+		float l = sqrtf(vx * vx + vy * vy);
+
+		if (l > (FLOAT)ATTACK_LENGTH) {	//	攻撃距離外なら
+			m_iBehaviorFlag = EFLAG_CHASE;	//	追跡行動
 			m_iTimer = 0;
 			break;
 		}
-		{
-			float l = 1.f / sqrtf(vx * vx + vy * vy);
-			float sin = (dirVX * vy - dirVY * vx);
-			float cos = (dirVX * vx + dirVY * vy) * l;
-			if (sin > 0) {
-				if (cos > ENEMY_ESCAPE_ANGLE) {
-					m_fAngle -= ENEMY_ESCAPE_ROTATION_SPEED;
-				}
-			}
-			else {
-				if (cos > ENEMY_ESCAPE_ANGLE) {
-					m_fAngle += ENEMY_ESCAPE_ROTATION_SPEED;
-				}
-			}
+		
+		l = 1.0f / l;
+		float sin = (dirVX * vy - dirVY * vx) * l;
+		float cos = (dirVX * vx + dirVY * vy) * l;
+		if (m_iTimer == MOVE_DURATION) {
+			m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
 		}
+		//	進行方向を変更
+		m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
+		//	進行方向へ加速
+		m_fVX = ENEMY_SPEED * dirVX;
+		m_fVY = ENEMY_SPEED * dirVY;
+		m_iTimer--;
 
-		m_fVX = ENEMY_ESCAPE_SPEED * cosf(m_fAngle);
-		m_fVY = ENEMY_ESCAPE_SPEED * sinf(m_fAngle);
-		break;
-
-	case EFLAG_ATTACKED:
-		m_iTimer++;
-		if (m_iTimer >= ATTACKED_DURATION) {
-			m_iBehaviorFlag = EFLAG_IDLE;
-			m_iTimer = 0;
+		if (m_iTimer <= 0) {
+			m_iAttackTimer = 0;
+			m_iBehaviorFlag = EFLAG_ATTACK;
 		}
-		float speedDecline = 0.5f * (FLOAT)(ATTACKED_DURATION - m_iTimer) / (FLOAT)ATTACKED_DURATION;
-		m_fVX = dirVX * ENEMY_SPEED * speedDecline;
-		m_fVY = dirVY * ENEMY_SPEED * speedDecline;
-		break;
 	}
+
+	break;
+
+	case EFLAG_ATTACK:	//	攻撃
+	{
+		if (m_iAttackTimer % ATTACK_INTERVAL == 0) {
+			float l = 1.f / sqrtf(vx * vx + vy * vy);
+			float sin = vy * l;
+			float cos = vx* l;
+			float angle = atan2(sin, cos);
+
+			int attackNum = (m_iAttackTimer / ATTACK_INTERVAL);
+			switch (attackNum) {
+			case 0:
+				{
+					CBullet *bullet = NULL;
+					bullet = new CBullet(m_fX, m_fY, angle);
+					m_pParent->AddBullet(bullet);
+					for (int i = 0; i < 2; ++i) {
+						float bulletAngle = angle + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+						bullet = new CBullet(m_fX, m_fY, bulletAngle);
+						m_pParent->AddBullet(bullet);
+					}
+				}
+			break;
+
+			case 1:
+				{
+					CBullet *bullet = NULL;
+					bullet = new CBullet(m_fX, m_fY, angle);
+					m_pParent->AddBullet(bullet);
+					for (int i = 0; i < 2; ++i) {
+						float bulletAngle = angle + BULLET_ANGLE_GAP_BIG * 2.f + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+						bullet = new CBullet(m_fX, m_fY, bulletAngle);
+						m_pParent->AddBullet(bullet);
+
+						bulletAngle = angle - BULLET_ANGLE_GAP_BIG * 2.f + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+						bullet = new CBullet(m_fX, m_fY, bulletAngle);
+						m_pParent->AddBullet(bullet);
+					}
+				}
+				break;
+
+			case 2:
+				{
+					CBullet *bullet = NULL;
+					bullet = new CBullet(m_fX, m_fY, angle);
+					m_pParent->AddBullet(bullet);
+					for (int i = 0; i < 2; ++i) {
+						float bulletAngle = angle + BULLET_ANGLE_GAP_BIG + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+						bullet = new CBullet(m_fX, m_fY, bulletAngle);
+						m_pParent->AddBullet(bullet);
+
+						bulletAngle = angle - BULLET_ANGLE_GAP_BIG + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+						bullet = new CBullet(m_fX, m_fY, bulletAngle);
+						m_pParent->AddBullet(bullet);
+					}
+				}
+				break;
+
+			}	//switch (attackNum)
+
+		}	//	if (m_iAttackTimer % ATTACK_INTERVAL == 0) 
+
+		if (++m_iAttackTimer > ATTACK_INTERVAL * 2) {
+			m_iTimer = MOVE_DURATION + 120;
+			m_iBehaviorFlag = EFLAG_MOVE;
+		}
+	}
+	break;
+
+	}	//	switch (m_iBehaviorFlag)
 
 
 	m_fX += m_fVX;
@@ -312,6 +363,106 @@ void CEnemyBoss::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(angle, center);
 	pRenderTarget->SetTransform(rotation);
 
+	//	リスポーンanimation
+	if (m_iRespawnAnimTimer >= 0) {
+		int tex = ((23 - m_iRespawnAnimTimer) % 12) >> 2;
+
+		src.left = 96.f * (2 - tex);
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		for (int i = 0; i < 6; ++i) {
+			rc.left = (center.x + 160 * cosf(PI * (0.5f + 0.33333f * i))) - 96.f;
+			rc.right = rc.left + 192.f;
+			rc.top = (center.y + 160 * sinf(PI * (0.5f + 0.33333f * i))) - 96.f;
+			rc.bottom = rc.top + 192.f;
+			pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		}
+
+		for (int i = 0; i < 6; ++i) {
+			rc.left = (center.x + 320 * cosf(PI * (0.5f + 0.33333f * i))) - 96.f;
+			rc.right = rc.left + 192.f;
+			rc.top = (center.y + 320 * sinf(PI * (0.5f + 0.33333f * i))) - 96.f;
+			rc.bottom = rc.top + 192.f;
+			pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		}
+
+		for (int i = 0; i < 6; ++i) {
+			rc.left = (center.x + 480 * cosf(PI * (0.5f + 0.33333f * i))) - 96.f;
+			rc.right = rc.left + 192.f;
+			rc.top = (center.y + 480 * sinf(PI * (0.5f + 0.33333f * i))) - 96.f;
+			rc.bottom = rc.top + 192.f;
+			pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		}
+
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
+
+
+	//	死亡アニメーション
+	if (m_bDamaged) {
+		int timer = (23 - m_iDestroyAnimTimer);
+		int tex;
+		int rad;
+
+		if (0 <= timer && timer <= 11) {
+			tex = timer >> 2;
+
+			src.left = 96.f * tex;
+			src.right = src.left + 96.f;
+			src.top = 0.f;
+			src.bottom = src.top + 96.f;
+
+			for (int i = 0; i < 6; ++i) {
+				rc.left = (center.x + 160 * cosf(PI * (0.5f + 0.33333f * i))) - 96.f;
+				rc.right = rc.left + 192.f;
+				rc.top = (center.y + 160 * sinf(PI * (0.5f + 0.33333f * i))) - 96.f;
+				rc.bottom = rc.top + 192.f;
+				pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+			}
+		}
+
+		if (6 <= timer && timer <= 17) {
+			tex = (timer - 6) >> 2;
+
+			src.left = 96.f * tex;
+			src.right = src.left + 96.f;
+			src.top = 0.f;
+			src.bottom = src.top + 96.f;
+
+			for (int i = 0; i < 6; ++i) {
+				rc.left = (center.x + 320 * cosf(PI * (0.5f + 0.33333f * i))) - 96.f;
+				rc.right = rc.left + 192.f;
+				rc.top = (center.y + 320 * sinf(PI * (0.5f + 0.33333f * i))) - 96.f;
+				rc.bottom = rc.top + 192.f;
+				pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+			}
+		}
+
+		if (12 <= timer && timer <= 23) {
+			tex = (timer - 12) >> 2;
+
+			src.left = 96.f * tex;
+			src.right = src.left + 96.f;
+			src.top = 0.f;
+			src.bottom = src.top + 96.f;
+
+			for (int i = 0; i < 6; ++i) {
+				rc.left = (center.x + 480 * cosf(PI * (0.5f + 0.33333f * i))) - 96.f;
+				rc.right = rc.left + 192.f;
+				rc.top = (center.y + 480 * sinf(PI * (0.5f + 0.33333f * i))) - 96.f;
+				rc.bottom = rc.top + 192.f;
+				pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+			}
+		}
+
+
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
+
 	//	Core
 	src.left = m_pTexCoord[texIndex];
 	src.top = 0.f;
@@ -325,18 +476,20 @@ void CEnemyBoss::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	pRenderTarget->DrawBitmap(m_pCoreImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 
-	//	Belt
-	src.left = 0.f;
-	src.top = 0.f;
-	src.right = src.left + (BELT_RAD << 1);
-	src.bottom = src.top + (BELT_RAD << 1);
+	if (m_iDotNum > 0) {
+		//	Belt
+		src.left = 0.f;
+		src.top = 0.f;
+		src.right = src.left + (BELT_RAD << 1);
+		src.bottom = src.top + (BELT_RAD << 1);
 
-	rc.left = center.x - BELT_RAD;
-	rc.right = rc.left + (BELT_RAD << 1);
-	rc.top = center.y - BELT_RAD;
-	rc.bottom = rc.top + (BELT_RAD << 1);
+		rc.left = center.x - BELT_RAD;
+		rc.right = rc.left + (BELT_RAD << 1);
+		rc.top = center.y - BELT_RAD;
+		rc.bottom = rc.top + (BELT_RAD << 1);
 
-	pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+		pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+	}
 
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
@@ -390,7 +543,7 @@ void CEnemyBoss::draw(ID2D1RenderTarget *pRenderTarget) {
 *@return	true 当たり / false 外れ
 */
 bool CEnemyBoss::collide(float x, float y, float r) {
-	if (m_iDamagedTimer > 0)
+	if (m_iDamagedTimer > 0 || m_bDamaged)
 		return false;
 
 	float vx = m_fX - x;
@@ -420,7 +573,7 @@ bool CEnemyBoss::collide(float x, float y, float r) {
 *@return	true 当たり / false 外れ
 */
 bool CEnemyBoss::collide(IGameObject *pObj) {
-	if (m_iDamagedTimer > 0)
+	if (m_iDamagedTimer > 0 || m_bDamaged)
 		return false;
 
 	float x = m_fX, y = m_fY, r;
@@ -455,6 +608,7 @@ void CEnemyBoss::damage(float amount) {
 	}
 	else {
 		m_bDamaged = true;
+		m_iDestroyAnimTimer--;
 	}
 }
 
@@ -492,8 +646,6 @@ void CEnemyBoss::SetFlag(int flag) {
 
 	switch (flag) {
 	case 1:
-		m_iTimer = 0;
-		m_iBehaviorFlag = EFLAG_ATTACKED;
 		break;
 	case 2:
 		break;
@@ -509,8 +661,10 @@ void CEnemyBoss::SetFlag(int flag) {
 void CEnemyBoss::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
 	SAFE_RELEASE(m_pCoreImage);
 	SAFE_RELEASE(m_pBeltImage);
+	SAFE_RELEASE(m_pDestroyImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, ENEMY_FILE_NAME, &m_pCoreImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, BELT_FILE_NAME, &m_pBeltImage);
+	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, ENEMY_DEST_FILE_NAME, &m_pDestroyImage);
 	m_pParent = pStage;
 
 	m_fFieldWidth = pStage->FIELD_WIDTH;
@@ -533,6 +687,7 @@ void CEnemyBoss::Finalize() {
 	m_pParent = NULL;
 	SAFE_RELEASE(m_pCoreImage);
 	SAFE_RELEASE(m_pBeltImage);
+	SAFE_RELEASE(m_pDestroyImage);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pRedBrush);

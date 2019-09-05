@@ -6,6 +6,8 @@
 #pragma once
 #define __IGAMEOBJECT_H__
 
+#include "SoundManager.h"
+
 //	‘O•ûéŒ¾
 struct ID2D1RenderTarget;
 
@@ -33,6 +35,7 @@ public:
 	virtual int GetNumber() { return -1; }
 	virtual int GetState() { return -1; }
 	virtual int GetID() { return -1; }
+	virtual int GetScore() { return 0; }
 
 	virtual void SetFlag(int flag) {};
 };

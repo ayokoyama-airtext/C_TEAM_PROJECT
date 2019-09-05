@@ -14,10 +14,12 @@
 
 #define PLAYERDOT_FILE_NAME			_T("res\\player_dot.png")
 #define PLAYERDOT_STRAW_FILE_NAME	_T("res\\straw_799x740.png")
+#define PLAYERDOT_DEST_FILE_NAME	_T("res\\player_destroy.png")
 
 //	staticメンバの初期化
 ID2D1Bitmap *CPlayerDot::m_pDotImage = NULL;
 ID2D1Bitmap *CPlayerDot::m_pStrawImage = NULL;
+ID2D1Bitmap *CPlayerDot::m_pDestroyImage = NULL;
 int	CPlayerDot::m_iCount = 0;
 CStage *CPlayerDot::m_pParent = NULL;
 CPlayer *CPlayerDot::m_pPlayer = NULL;
@@ -37,6 +39,7 @@ CPlayerDot::CPlayerDot()
 	m_fRad = (FLOAT)DEFAULT_RAD;
 	m_fAngle = 0;
 	m_iState = 1;
+	m_iDestroyAnimTimer = 12;
 }
 
 
@@ -47,9 +50,14 @@ CPlayerDot::~CPlayerDot()
 
 
 bool CPlayerDot::move() {
+
 	//	壊れてたら戻る
-	if (!m_iState)
+	if (!m_iState) {
+		if (m_iDestroyAnimTimer >= 0) {
+			m_iDestroyAnimTimer--;
+		}
 		return true;
+	}
 
 	if (false == m_pParent->playerCoords.playerIsWHmode) {
 		m_iTimer++;
@@ -71,8 +79,8 @@ bool CPlayerDot::move() {
 
 
 void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
-	//	壊れてたら描画しない
-	if (!m_iState)
+	//	壊れ終わったら描画しない
+	if (m_iDestroyAnimTimer < 0)
 		return;
 
 
@@ -88,6 +96,26 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	center.x = playerDrawX + (m_fX - playerX);
 	center.y = playerDrawY + (m_fY - playerY);
 	
+	float degreeAngle = 180.f * (m_fAngle + PI * 0.5f) / PI;
+	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(degreeAngle, center);
+	pRenderTarget->SetTransform(rotation);
+
+	if (!m_iState) {
+		int index = (11 - m_iDestroyAnimTimer) >> 2;
+		src.left = 96.f * index;
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = center.x - 48.f;
+		rc.right = rc.left + 96.f;
+		rc.top = center.y - 48.f;
+		rc.bottom = rc.top + 96.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
 
 	//	Dot
 	src.left = 0.f;
@@ -100,9 +128,6 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	rc.top = center.y - m_fRad;
 	rc.bottom = rc.top + m_fRad * 2.f;
 
-	float degreeAngle = 180.f * (m_fAngle + PI * 0.5f) / PI;
-	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(degreeAngle, center);
-	pRenderTarget->SetTransform(rotation);
 
 	pRenderTarget->DrawBitmap(m_pDotImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 	
@@ -135,12 +160,12 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	el.point.y = playerDrawY + (m_fY - playerY);
 	el.radiusX = m_fRad;
 	el.radiusY = m_fRad;
-	if (IsWHmode) {
+	/*if (IsWHmode) {
 		pRenderTarget->FillEllipse(el, m_pBrushWhite);
 	}
 	else {
 		pRenderTarget->FillEllipse(el, m_pBrushBlack);
-	}
+	}*/
 #endif // _DEBUG
 
 }
@@ -191,6 +216,16 @@ bool CPlayerDot::collide(IGameObject *pObj) {
 void CPlayerDot::damage(float amount) {
 	m_iState = 0;
 	m_pPlayer->DecreaseAliveDotNum();
+	m_iDestroyAnimTimer--;
+}
+
+/**
+*@brief	ドットを復活させる
+*/
+void CPlayerDot::ReviveDot() {
+	m_iState = 1;
+	m_iTimer = 0;
+	m_iDestroyAnimTimer = 12;
 }
 
 /**
@@ -211,8 +246,10 @@ float CPlayerDot::GetY() {
 void CPlayerDot::Restore(ID2D1RenderTarget *pTarget, CStage *pStage, CPlayer *pPlayer) {
 	SAFE_RELEASE(m_pDotImage);
 	SAFE_RELEASE(m_pStrawImage);
+	SAFE_RELEASE(m_pDestroyImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_FILE_NAME, &m_pDotImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_STRAW_FILE_NAME, &m_pStrawImage);
+	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYERDOT_DEST_FILE_NAME, &m_pDestroyImage);
 	m_pParent = pStage;
 	m_pPlayer = pPlayer;
 
@@ -231,6 +268,7 @@ void CPlayerDot::Finalize() {
 	m_pParent = NULL;
 	SAFE_RELEASE(m_pDotImage);
 	SAFE_RELEASE(m_pStrawImage);
+	SAFE_RELEASE(m_pDestroyImage);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pBrushBlack);

@@ -28,7 +28,7 @@ protected:
 	int		m_iIndex;
 	int		m_iRespawnNum;	//	一つのwaveでリスポーンしたエネミーの数
 
-	static const int PITCH = 2;
+	static const int PITCH = 3;
 
 	static SHORT m_pEnemySetData[];
 	static size_t m_szEnemySetDataSize;

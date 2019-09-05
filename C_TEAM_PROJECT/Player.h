@@ -30,6 +30,7 @@ public:
 	virtual bool collideWithBoss(float x, float y, float r);
 	virtual void damage(float amount) override;
 
+	virtual void ReviveDot();
 	virtual void setPos(float x, float y, float r);
 protected:
 	CStage	*m_pParent;
@@ -74,13 +75,13 @@ protected:
 	//	定数
 	static const int PLAYER_START_X = 2880;
 	static const int PLAYER_START_Y = 2880;
-	static const int START_DOT_NUM = 3;
-	static const int START_MAX_DOT_NUM = 3;
+	static const int START_DOT_NUM = 5;
+	static const int START_MAX_DOT_NUM = 5;
 	static const int BELT_RAD = 96;		//	ベルト半径
 	static const int DOT_RAD = 24;			//	ドット半径
 	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ
 	static const float ROTATION_SPEED;		//	回転速度
-	static const float PLAYER_SPEED;		//	移動速度
+	static const float PLAYER_SPEED;		//	移動最高速度
 	static const int DAMAGED_DURATION = 90;	//	無敵時間
 	static const int SHOT_INTERVAL = 120;	//	弾の発射間隔
 

@@ -1,3 +1,8 @@
+/**
+* @file Stage.cpp
+* @brief クラスCStageの実装ファイル
+* @author A.Yokoyama
+*/
 #include "stdafx.h"
 #include <d2d1.h>
 #include <list>
@@ -9,6 +14,7 @@
 #include "EnemyDot.h"
 #include "EnemyBoss.h"
 #include "Shot.h"
+#include "Bullet.h"
 #include "UI.h"
 #include "TextureLoader.h"
 
@@ -32,6 +38,7 @@ CStage::CStage(CSelector *pSystem)
 		m_pPlayerDots = new std::list<IGameObject*>();	//!< playerより先に作ること！
 
 		m_pPlayer = new CPlayer(this);
+		m_pPlayer->CalcDrawCoord(&playerCoords);
 		m_pBG = new CBG(this);
 
 		CPlayerDot::Restore(pTarget, this, m_pPlayer);	//!< playerの後でRestoreすること!
@@ -45,6 +52,9 @@ CStage::CStage(CSelector *pSystem)
 
 		CShot::Restore(this, m_pPlayer, pTarget);
 		m_pShots = new std::list<IGameObject*>();
+
+		CBullet::Restore(this, pTarget);
+		m_pBullets = new std::list<IGameObject*>();
 
 		m_pUI = new CUI(this);
 
@@ -63,6 +73,17 @@ CStage::CStage(CSelector *pSystem)
 
 CStage::~CStage()
 {
+	//	全bulletの削除
+	if (m_pBullets) {
+		std::list<IGameObject*>::iterator it = m_pBullets->begin();
+		while (it != m_pBullets->end()) {
+			delete (*it);
+			it = m_pBullets->erase(it);
+		}
+		SAFE_DELETE(m_pBullets);
+	}
+	CBullet::Finalize();
+
 	//	全shotの削除
 	if (m_pShots) {
 		std::list<IGameObject*>::iterator it = m_pShots->begin();
@@ -215,6 +236,20 @@ GameSceneResultCode CStage::move() {
 			}
 		}
 
+		//	Bulletの処理
+		if (m_pBullets) {
+			std::list<IGameObject*>::iterator it = m_pBullets->begin();
+			while (it != m_pBullets->end()) {
+				if ((*it)->move()) {
+					++it;
+				}
+				else {
+					SAFE_DELETE(*it);
+					it = m_pBullets->erase(it);
+				}
+			}
+		}
+
 		//********************************
 		//		当たり判定	
 		//********************************
@@ -231,12 +266,12 @@ GameSceneResultCode CStage::move() {
 		}
 
 
-		//	強EnemyDot(先頭についてるやつ + Bossのドット)とプレイヤー&プレイヤードット
+		//	強EnemyDot(先頭についてるやつ + BossのLife2ドット)とプレイヤー&プレイヤードット
 		if (m_pPlayerDots && m_pEnemyDots) {
 			std::list<IGameObject*>::iterator eIt = m_pEnemyDots->begin();
 			std::list<IGameObject*>::iterator pIt;
 			while (eIt != m_pEnemyDots->end()) {
-				if (0 == (*eIt)->GetNumber() || 0 == (*eIt)->GetID()) {
+				if (0 == (*eIt)->GetID()) {
 					if ((*eIt)->collide(m_pPlayer)) {
 						m_pPlayer->damage(1.0f);
 					}
@@ -298,6 +333,10 @@ GameSceneResultCode CStage::move() {
 					while (it2 != m_pEnemies->end()) {
 						if ( (*it2)->collide((*it)) ) {
 							(*it2)->damage(1.0f);
+							if (0 == (*it2)->GetState()) {
+								m_pPlayer->ReviveDot();
+								m_iScore += (*it2)->GetScore();
+							}
 						}
 						++it2;
 					}
@@ -341,6 +380,59 @@ GameSceneResultCode CStage::move() {
 				}
 				sIt++;
 			}
+		}
+
+		//	shot と bullet
+		if (m_pShots && m_pBullets) {
+			std::list<IGameObject*>::iterator sIt = m_pShots->begin();
+			std::list<IGameObject*>::iterator bIt;
+			while (sIt != m_pShots->end()) {
+				bIt = m_pBullets->begin();
+				while (bIt != m_pBullets->end()) {
+					if ((*bIt)->collide(*sIt)) {
+						(*bIt)->damage(1.f);
+						(*sIt)->damage(1.f);
+						bIt = m_pBullets->end();
+					}
+					else {
+						bIt++;
+					}
+				}
+				sIt++;
+			}
+		}
+
+		//	bullet と player/player dot
+		if (m_pPlayer && m_pPlayerDots && m_pBullets) {
+			//	bullet と ドット
+			std::list<IGameObject*>::iterator dIt = m_pPlayerDots->begin();
+			std::list<IGameObject*>::iterator bIt;
+			while (dIt != m_pPlayerDots->end()) {
+				bIt = m_pBullets->begin();
+				while (bIt != m_pBullets->end()) {
+					if ((*bIt)->collide(*dIt)) {
+						(*bIt)->damage(1.f);
+						if (playerCoords.playerIsWHmode == true) {
+							(*dIt)->damage(1.f);
+						}
+						bIt = m_pBullets->end();
+					}
+					else {
+						bIt++;
+					}
+				}
+				dIt++;
+			}
+
+			//	player と bullet
+			bIt = m_pBullets->begin();
+			while (bIt != m_pBullets->end()) {
+				if ((*bIt)->collide(m_pPlayer)) {
+					(*bIt)->damage(1.f);
+				}
+				bIt++;
+			}
+
 		}
 
 
@@ -404,6 +496,13 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 	if (m_pShots) {
 		std::list<IGameObject*>::iterator it = m_pShots->begin();
 		while (it != m_pShots->end()) {
+			(*it++)->draw(pRenderTarget);
+		}
+	}
+
+	if (m_pBullets) {
+		std::list<IGameObject*>::iterator it = m_pBullets->begin();
+		while (it != m_pBullets->end()) {
 			(*it++)->draw(pRenderTarget);
 		}
 	}
@@ -479,8 +578,8 @@ void CStage::AddEnemyDot(IGameObject *pObj) {
 
 /***********************************************
 *@method
-*    生成されたEnemyDotをリンクリストに登録する
-*@param in pObj  新しいEnemyDotのオブジェクト
+*    生成されたShotをリンクリストに登録する
+*@param in pObj  新しいShotのオブジェクト
 ************************************************/
 void CStage::AddShot(IGameObject *pObj) {
 	if (m_pShots) {
@@ -488,6 +587,16 @@ void CStage::AddShot(IGameObject *pObj) {
 	}
 }
 
+/***********************************************
+*@method
+*    生成されたBulletをリンクリストに登録する
+*@param in pObj  新しいBulletのオブジェクト
+************************************************/
+void CStage::AddBullet(IGameObject *pObj) {
+	if (m_pBullets) {
+		m_pBullets->push_back(pObj);
+	}
+}
 
 int CStage::GetScore() {
 	return m_iScore;

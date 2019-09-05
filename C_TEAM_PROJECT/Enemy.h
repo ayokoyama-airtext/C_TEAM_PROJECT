@@ -18,7 +18,7 @@ class CEnemy :
 	public IGameObject
 {
 public:
-	CEnemy(float x, float y, float scale);
+	CEnemy(float x, float y, float scale, int dotNum);
 	virtual ~CEnemy();
 	virtual bool move() override;
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
@@ -30,6 +30,8 @@ public:
 	virtual float GetY() override;
 	virtual float GetRad() override;
 	virtual float GetAngle() override;
+	virtual int GetState() override { return m_bDamaged ? 0 : 1; }
+	virtual int GetScore() override { return 1000; }
 
 	virtual void SetFlag(int flag) override;
 
@@ -55,6 +57,8 @@ protected:
 	INT		m_iTimer;
 	INT		m_iDamagedTimer;	//	無敵時間の管理
 	INT		m_iAnimationTimer;
+	INT		m_iDestroyAnimTimer;
+	INT		m_iRespawnAnimTimer;
 
 	int		m_iBehaviorFlag;	//	エネミーの行動状態を管理するフラグ
 	//	m_iBehaviorFlag用定数
@@ -74,7 +78,8 @@ protected:
 	static const float ENEMY_ESCAPE_ROTATION_SPEED;
 	static const float ENEMY_ESCAPE_ANGLE;
 	static const float SEARCH_ANGLE;			//	索敵角度
-	static const int SEARCH_LENGTH = 750;	//	索敵距離
+	static const int SEARCH_LENGTH = 750;		//	索敵距離
+	static const int APPROACH_LENGHT = 1240;	//	これより離れてるとプレイヤーに近寄っていく
 	static const int MAX_CHASE_LENGTH = 800;		//	追跡時間
 	static const int ESCAPE_DURATION = 90;		//	逃走時間
 	static const int DAMAGED_DURATION = 30;		//	無敵時間
@@ -85,6 +90,7 @@ protected:
 	static CStage			*m_pParent;
 	static ID2D1Bitmap		*m_pCoreImage;
 	static ID2D1Bitmap		*m_pBeltImage;
+	static ID2D1Bitmap		*m_pDestroyImage;
 	static FLOAT m_fFieldWidth;
 	static FLOAT m_fFieldHeight;
 	static FLOAT m_pRandomMove[];

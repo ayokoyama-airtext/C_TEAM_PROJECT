@@ -95,7 +95,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	if (!hWnd)
 		return FALSE;
 	
-
+	ShowCursor(false);
 
 
 	/*devMode.dmSize = sizeof(DEVMODE);

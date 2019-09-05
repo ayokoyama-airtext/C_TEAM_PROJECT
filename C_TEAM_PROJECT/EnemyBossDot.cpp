@@ -1,3 +1,8 @@
+/**
+*@file		EnemyBossDot.cpp
+*@author	A.Yokoyama
+*@brief		エネミーBossDotクラスの実装
+*/
 #include "stdafx.h"
 #include <d2d1.h>
 #include <math.h>
@@ -10,16 +15,24 @@ CEnemyBossDot::~CEnemyBossDot()
 }
 
 bool CEnemyBossDot::move() {
-	if (m_bDamaged)
-		m_iDestroyAnimTimer--;
+	if (m_iRespawnAnimTimer >= 0) {
+		m_iRespawnAnimTimer--;
+	}
 
-	if (!m_iState && m_iDestroyAnimTimer < 0)
-		return false;
+	if (!m_iState) {
+		if (--m_iDestroyAnimTimer >= 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	m_iTimer++;
 
 	if (m_iLife < 2) {
 		m_fRad = 24.f;
+		m_iID = 1;
 	}
 
 	if (m_iDamageTimer > 0) {
@@ -53,6 +66,29 @@ void CEnemyBossDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(degreeAngle, center);
 	pRenderTarget->SetTransform(rotation);
 
+	//	respawn animation
+	if (m_iRespawnAnimTimer >= 0) {
+		if (m_iRespawnAnimTimer > 11) {
+			pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+			return;
+		}
+
+		int index = (11 - m_iRespawnAnimTimer) >> 2;
+		src.left = 96.f * (2 - index);
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = center.x - 48.f;
+		rc.right = rc.left + 96.f;
+		rc.top = center.y - 48.f;
+		rc.bottom = rc.top + 96.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
+
 	//	destroy animation
 	if (m_bDamaged) {
 		int index = (11 - m_iDestroyAnimTimer) >> 2;
@@ -83,6 +119,23 @@ void CEnemyBossDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	rc.bottom = rc.top + m_fRad * 2.f;
 
 	pRenderTarget->DrawBitmap(m_pDotImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+	//	Straw
+	if (m_iID == 0) {
+		int texIndex = (m_iTimer % 24) / 6;
+
+		src.left = m_pStrawTexCoord[texIndex];
+		src.right = src.left + 799.f;
+		src.top = 0.f;
+		src.bottom = src.top + 740.f;
+
+		rc.left -= m_fRad;
+		rc.right += m_fRad;
+		rc.bottom = rc.top;
+		rc.top -= m_fRad * 4;
+
+		pRenderTarget->DrawBitmap(m_pStrawImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	}
 
 	if (m_iDamageTimer > 0) {
 		D2D1_ELLIPSE el;

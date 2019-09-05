@@ -102,7 +102,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;$(USERNAME);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BG.h" />
+    <ClInclude Include="Bullet.h" />
     <ClInclude Include="C_TEAM_PROJECT.h" />
     <ClInclude Include="ddsfunctions.h" />
     <ClInclude Include="Enemy.h" />
@@ -164,12 +165,17 @@
     <ClInclude Include="GameOver.h" />
     <ClInclude Include="IGameObject.h" />
     <ClInclude Include="IGameScene.h" />
+    <ClInclude Include="PcmCallback.h" />
+    <ClInclude Include="PcmSound.h" />
+    <ClInclude Include="PcmStreamSound.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerDot.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Result.h" />
+    <ClInclude Include="SDKwavefile.h" />
     <ClInclude Include="Selector.h" />
     <ClInclude Include="Shot.h" />
+    <ClInclude Include="SoundManager.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="StageSelect.h" />
     <ClInclude Include="stdafx.h" />
@@ -178,9 +184,11 @@
     <ClInclude Include="tgafunctions.h" />
     <ClInclude Include="Title.h" />
     <ClInclude Include="UI.h" />
+    <ClInclude Include="XAudio2Context.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BG.cpp" />
+    <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="C_TEAM_PROJECT.cpp" />
     <ClCompile Include="ddsfunctions.cpp" />
     <ClCompile Include="Enemy.cpp" />
@@ -197,11 +205,16 @@
     <ClCompile Include="GameOver.cpp" />
     <ClCompile Include="IGameObject.cpp" />
     <ClCompile Include="IGameScene.cpp" />
+    <ClCompile Include="PcmCallback.cpp" />
+    <ClCompile Include="PcmSound.cpp" />
+    <ClCompile Include="PcmStreamSound.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerDot.cpp" />
     <ClCompile Include="Result.cpp" />
+    <ClCompile Include="SDKwavefile.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Shot.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Stage.cpp" />
     <ClCompile Include="StageSelect.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -214,6 +227,7 @@
     <ClCompile Include="tgafunctions.cpp" />
     <ClCompile Include="Title.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="XAudio2Context.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="C_TEAM_PROJECT.rc" />

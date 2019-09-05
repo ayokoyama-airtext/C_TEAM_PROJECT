@@ -1,8 +1,10 @@
 /**
 * @file Selector.cpp
 * @brief クラスCSelectorの実装ファイル
+* @author A.Yokoyama
 */
 #include "stdafx.h"
+#include "SoundManager.h"
 #include <d2d1.h>
 #include <dwrite.h>
 #include "Selector.h"
@@ -13,6 +15,9 @@
 #include "Result.h"
 #include "TextureLoader.h"
 
+
+#define SOUND_SHOT _T("res\\sound\\shoot.wav")
+#define BGM_STAGE	_T("res\\sound\\stage.wav")
 
 CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 {
@@ -81,11 +86,16 @@ CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 	}
 #endif
 
+
+	//	sound
+	CSoundManager::LoadOneShot(SOUND_SHOT);
+	CSoundManager::LoadStreamSound(BGM_STAGE, true);
 }
 
 
 CSelector::~CSelector()
 {
+	CSoundManager::Finalize();
 	SAFE_DELETE(m_pScene);
 	SAFE_RELEASE(m_pRenderTarget);
 	CTextureLoader::Destroy();
@@ -143,8 +153,12 @@ void CSelector::doAnim() {
 		m_eGamePhase = GAMEPHASE_GAMEOVER;
 		m_pScene = new CGameOver(this);
 #elif yakihiro || ayokoyama
-		m_eGamePhase = GAMEPHASE_GAME;
-		m_pScene = new CStage(this);
+		/*m_eGamePhase = GAMEPHASE_GAME;
+		m_pScene = new CStage(this);*/
+		m_eGamePhase = GAMEPHASE_RESULT;
+		m_pScene = new CResult(this);
+		/*m_eGamePhase = GAMEPHASE_GAMEOVER;
+		m_pScene = new CGameOver(this);*/
 #else
 		m_eGamePhase = GAMEPHASE_GAME;
 		m_pScene = new CStage(this);
@@ -153,6 +167,7 @@ void CSelector::doAnim() {
 		break;
 
 	case GAMEPHASE_RESET:
+		CSoundManager::PlayStreamSound(0, 1.0f);
 		m_iEndTime = 0;
 		m_iEndScore = 0;
 		SAFE_DELETE(m_pScene);
@@ -260,6 +275,13 @@ void CSelector::doDraw(ID2D1RenderTarget *pRenderTarget) {
 		rc.top += 120.f;
 		_stprintf_s(str, _countof(str), _T("Press 'Enter' : ゲーム本編へ移動"));
 		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat2, &rc, m_pRedBrush);
+
+#if defined(ayokoyama) || defined(yakihiro)
+		rc.top += 120.f;
+		_stprintf_s(str, _countof(str), _T("Press 'R' : 正規順で開始"));
+		pRenderTarget->DrawText(str, _tcslen(str), m_pTextFormat2, &rc, m_pRedBrush);
+#endif
+
 		break;
 
 	case GAMEPHASE_TITLE:

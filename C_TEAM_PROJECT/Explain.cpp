@@ -1,3 +1,8 @@
+/**
+* @file Explain.cpp
+* @brief クラスCExplainの実装ファイル
+* @author A.Yokoyama
+*/
 #include "stdafx.h"
 #include <d2d1.h>
 #include <dwrite.h>

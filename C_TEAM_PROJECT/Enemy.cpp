@@ -15,6 +15,8 @@
 
 #define ENEMY_FILE_NAME	_T("res\\enemy_core.png")
 #define BELT_FILE_NAME	_T("res\\belt.png")
+#define ENEMY_DEST_FILE_NAME	_T("res\\enemy_destroy.png")
+
 const float CEnemy::ROTATION_SPEED = 0.025f;
 const float CEnemy::ENEMY_SPEED = 5.f;
 const float CEnemy::ENEMY_ESCAPE_SPEED = 8.f;
@@ -30,6 +32,7 @@ FLOAT CEnemy::m_fFieldWidth = 0.f;
 FLOAT CEnemy::m_fFieldHeight = 0.f;
 ID2D1Bitmap *CEnemy::m_pCoreImage = NULL;
 ID2D1Bitmap *CEnemy::m_pBeltImage = NULL;
+ID2D1Bitmap *CEnemy::m_pDestroyImage = NULL;
 CStage *CEnemy::m_pParent = NULL;
 #ifdef _DEBUG
 ID2D1SolidColorBrush *CEnemy::m_pBrush = NULL;
@@ -38,7 +41,7 @@ ID2D1SolidColorBrush *CEnemy::m_pRedBrush = NULL;
 
 
 
-CEnemy::CEnemy(float x, float y, float scale)
+CEnemy::CEnemy(float x, float y, float scale, int dotNum)
 {
 	m_fX = x;
 	m_fY = y;
@@ -47,7 +50,7 @@ CEnemy::CEnemy(float x, float y, float scale)
 	m_fRad = BELT_RAD;
 	m_fCoreRad = (FLOAT)(CORE_LENGTH >> 1);
 	m_fScale = scale;
-	m_iMaxDotNum = 5;
+	m_iMaxDotNum = dotNum;
 	m_iDotNum = m_iMaxDotNum;
 	m_fAngle = PI * 0.5f;
 	m_iRandomMoveIndex = 0;
@@ -68,6 +71,8 @@ CEnemy::CEnemy(float x, float y, float scale)
 	m_iTimer = 0;
 	m_iAnimationTimer = 0;
 	m_iDamagedTimer = 0;
+	m_iDestroyAnimTimer = 12;
+	m_iRespawnAnimTimer = 12;
 	m_bDamaged = false;
 }
 
@@ -79,23 +84,37 @@ CEnemy::~CEnemy()
 
 /**
 *@brief	アニメーションメソッド
+*@return	true : 生存 / false : 死亡
 */
 bool CEnemy::move() {
+
+	if (m_iRespawnAnimTimer >= 0) {
+		m_iRespawnAnimTimer--;
+	}
+
+	//	m_bDamaged == true なら ドットが残っていたらStateを0に設定してからfalse を返す
 	if (m_bDamaged) {
 		if (m_iDotNum > 0) {
 			for (int i = 0; i < m_iDotNum; ++i) {
 				m_pDots[i]->SetStateZero();
 			}
+			m_iDotNum = 0;
 		}
+		if (--m_iDestroyAnimTimer >= 0) {
+			return true;
+		}
+		
 		return false;
 	}
 
+	//	ドットが死んでいたらStateを0にして、管理から外す
 	for (int i = 0; i < m_iDotNum; ++i) {
 		if (m_pDots[i]->IsDead()) {
 			m_pDots[i]->SetStateZero();
 			m_pDots[i] = m_pDots.back();
 			m_pDots.pop_back();
 			m_iDotNum--;
+			i--;
 		}
 	}
 
@@ -137,7 +156,7 @@ bool CEnemy::move() {
 		{
 			//	プレイヤーとの角度を計算
 			float l = sqrtf(vx * vx + vy * vy);
-			float cos = (dirVX * vx + dirVY * dirVY) / l;
+			float cos = (dirVX * vx + dirVY * vy) / l;
 			if (cos > SEARCH_ANGLE) {	//	索敵角度内なら
 				if (l < (FLOAT)SEARCH_LENGTH) {	//	索敵距離内なら
 					m_iBehaviorFlag = EFLAG_CHASE;	//	追跡へ移行
@@ -146,16 +165,51 @@ bool CEnemy::move() {
 				}
 			}
 
-			if (m_iTimer == 0) {
-				m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
-				m_iTimer = 180;
+			if (l > APPROACH_LENGHT) {	//	離れすぎてたら近づく
+				l = 1.0f / l;
+				float sin = (dirVX * vy - dirVY * vx);
+				if (sin > 0) {	//	プレイヤーは進行方向右側
+					if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+						m_fVX = vx * l;
+						m_fVY = vy * l;
+						m_fAngle = atan2(m_fVY, m_fVX);
+						m_fVX *= ENEMY_SPEED;
+						m_fVY *= ENEMY_SPEED;
+					}
+					else {
+						m_fVX = 0;
+						m_fVY = 0;
+						m_fAngle += ROTATION_SPEED;
+					}
+				}
+				else {	//	プレイヤーは進行方向左側
+					if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+						m_fVX = vx * l;
+						m_fVY = vy * l;
+						m_fAngle = atan2(m_fVY, m_fVX);
+						m_fVX *= ENEMY_SPEED;
+						m_fVY *= ENEMY_SPEED;
+					}
+					else {
+						m_fVX = 0;
+						m_fVY = 0;
+						m_fAngle -= ROTATION_SPEED;
+					}
+				}
 			}
-			//	進行方向を変更
-			m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
-			//	進行方向へ加速
-			m_fVX = ENEMY_SPEED * dirVX;
-			m_fVY = ENEMY_SPEED * dirVY;
-			m_iTimer--;
+			else {
+				if (m_iTimer == 0) {
+					m_iRandomMoveIndex = (rand() >> 4) % m_iRandomMoveSize;
+					m_iTimer = 180;
+				}
+				//	進行方向を変更
+				m_fAngle += ROTATION_SPEED * m_pRandomMove[m_iRandomMoveIndex];
+				//	進行方向へ加速
+				m_fVX = ENEMY_SPEED * dirVX;
+				m_fVY = ENEMY_SPEED * dirVY;
+				m_iTimer--;
+			}
+
 		}
 
 		break;
@@ -307,6 +361,53 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(angle, center);
 	pRenderTarget->SetTransform(rotation);
+
+	//	リスポーンアニメーション
+	if (m_iRespawnAnimTimer >= 0) {
+		int index = (11 - m_iRespawnAnimTimer) >> 2;
+		src.left = 96.f * (2 - index);
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = center.x - 96.f - 24.f;
+		rc.right = rc.left + 192.f;
+		rc.top = center.y - 96.f;
+		rc.bottom = rc.top + 192.f;
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		rc.left = center.x - 96.f + 24.f;
+		rc.right = rc.left + 192.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
+
+	//	死亡アニメーション
+	if (m_bDamaged) {
+		int index = (11 - m_iDestroyAnimTimer) >> 2;
+		src.left = 96.f * index;
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = center.x - 96.f - 24.f;
+		rc.right = rc.left + 192.f;
+		rc.top = center.y - 96.f;
+		rc.bottom = rc.top + 192.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		rc.left = center.x - 96.f + 24.f;
+		rc.right = rc.left + 192.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
 	
 	//	Core
 	src.left = m_pTexCoord[texIndex];
@@ -322,28 +423,30 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 	pRenderTarget->DrawBitmap(m_pCoreImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 
 	//	Belt
-	src.left = 0.f;
-	src.top = 0.f;
-	src.right = src.left + (BELT_RAD << 1);
-	src.bottom = src.top + (BELT_RAD << 1);
+	if (m_iDotNum > 0) {
+		src.left = 0.f;
+		src.top = 0.f;
+		src.right = src.left + (BELT_RAD << 1);
+		src.bottom = src.top + (BELT_RAD << 1);
 
-	rc.left = center.x - BELT_RAD;
-	rc.right = rc.left + (BELT_RAD << 1);
-	rc.top = center.y - BELT_RAD;
-	rc.bottom = rc.top + (BELT_RAD << 1);
+		rc.left = center.x - BELT_RAD;
+		rc.right = rc.left + (BELT_RAD << 1);
+		rc.top = center.y - BELT_RAD;
+		rc.bottom = rc.top + (BELT_RAD << 1);
 
-	pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		pRenderTarget->DrawBitmap(m_pBeltImage, rc, opacity, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+	}
 
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
 #ifdef _DEBUG
 	//	ベルト
-	D2D1_ELLIPSE el;
+	/*D2D1_ELLIPSE el;
 	el.point.x = center.x;
 	el.point.y = center.y;
 	el.radiusX = m_fRad;
 	el.radiusY = m_fRad;
-	pRenderTarget->DrawEllipse(el, m_pBrush);
+	pRenderTarget->DrawEllipse(el, m_pBrush);*/
 
 	//	ドット
 	/*for (int i = 0; i < m_iDotNum; ++i) {
@@ -355,24 +458,24 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 		pRenderTarget->DrawEllipse(el, m_pBrush);
 	}*/
 
-	//	コア
-	D2D1_POINT_2F point;
-	angle = 180.f * (m_fAngle + PI * 0.5f) / PI;
-	rc.left = center.x - CORE_LENGTH * 0.5f;
-	rc.right = rc.left + CORE_LENGTH;
-	rc.top = center.y - CORE_LENGTH * 0.5f;
-	rc.bottom = rc.top + CORE_LENGTH;
-	point.x = rc.left + CORE_LENGTH * 0.5f;
-	point.y = rc.top + CORE_LENGTH * 0.5f;
-	D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(angle, point);
-	pRenderTarget->SetTransform(rotate);
+	////	コア
+	//D2D1_POINT_2F point;
+	//angle = 180.f * (m_fAngle + PI * 0.5f) / PI;
+	//rc.left = center.x - CORE_LENGTH * 0.5f;
+	//rc.right = rc.left + CORE_LENGTH;
+	//rc.top = center.y - CORE_LENGTH * 0.5f;
+	//rc.bottom = rc.top + CORE_LENGTH;
+	//point.x = rc.left + CORE_LENGTH * 0.5f;
+	//point.y = rc.top + CORE_LENGTH * 0.5f;
+	//D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(angle, point);
+	//pRenderTarget->SetTransform(rotate);
 
-	pRenderTarget->DrawRectangle(rc, m_pBrush);
+	//pRenderTarget->DrawRectangle(rc, m_pBrush);
 
-	rc.bottom = rc.top + CORE_LENGTH * 0.2f;
-	pRenderTarget->DrawRectangle(rc, m_pRedBrush);
+	//rc.bottom = rc.top + CORE_LENGTH * 0.2f;
+	//pRenderTarget->DrawRectangle(rc, m_pRedBrush);
 
-	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+	//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 #endif // _DEBUG
 
 
@@ -386,7 +489,7 @@ void CEnemy::draw(ID2D1RenderTarget *pRenderTarget) {
 *@return	true 当たり / false 外れ
 */
 bool CEnemy::collide(float x, float y, float r) {
-	if (m_iDamagedTimer > 0)
+	if (m_iDamagedTimer > 0 || m_bDamaged)
 		return false;
 
 	float vx = m_fX - x;
@@ -409,7 +512,7 @@ bool CEnemy::collide(float x, float y, float r) {
 *@return	true 当たり / false 外れ
 */
 bool CEnemy::collide(IGameObject *pObj) {
-	if (m_iDamagedTimer > 0)
+	if (m_iDamagedTimer > 0 || m_bDamaged)
 		return false;
 
 	float x = m_fX, y = m_fY, r = m_fCoreRad;
@@ -419,6 +522,9 @@ bool CEnemy::collide(IGameObject *pObj) {
 
 
 void CEnemy::damage(float amount) {
+	if (m_iRespawnAnimTimer >= 0)
+		return;
+
 	if (m_iDotNum > 0) {
 		m_pDots[--m_iDotNum]->SetStateZero();
 		m_pDots.pop_back();
@@ -428,6 +534,7 @@ void CEnemy::damage(float amount) {
 	}
 	else {
 		m_bDamaged = true;
+		m_iDestroyAnimTimer--;
 	}
 }
 
@@ -455,6 +562,7 @@ float CEnemy::GetRad() {
 float CEnemy::GetAngle() {
 	return m_fAngle;
 }
+
 
 /**
 *@brief	フラグを設定する
@@ -486,8 +594,10 @@ void CEnemy::SetFlag(int flag) {
 void CEnemy::Restore(ID2D1RenderTarget *pTarget, CStage *pStage) {
 	SAFE_RELEASE(m_pCoreImage);
 	SAFE_RELEASE(m_pBeltImage);
+	SAFE_RELEASE(m_pDestroyImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, ENEMY_FILE_NAME, &m_pCoreImage);
 	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, BELT_FILE_NAME, &m_pBeltImage);
+	CTextureLoader::CreateD2D1BitmapFromFile(pTarget, ENEMY_DEST_FILE_NAME, &m_pDestroyImage);
 	m_pParent = pStage;
 
 	m_fFieldWidth = pStage->FIELD_WIDTH;
@@ -510,6 +620,7 @@ void CEnemy::Finalize() {
 	m_pParent = NULL;
 	SAFE_RELEASE(m_pCoreImage);
 	SAFE_RELEASE(m_pBeltImage);
+	SAFE_RELEASE(m_pDestroyImage);
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pRedBrush);

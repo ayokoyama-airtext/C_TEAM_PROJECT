@@ -20,8 +20,9 @@ float CPlayer::m_pTextureCoord[] = { 0.f, 96.f, 192.f };
 const float CPlayer::ROTATION_SPEED = 0.05f;
 const float CPlayer::PLAYER_SPEED = 10.f;
 
-#define DECREASE_SPEED 0.075f
-#define BRAKE_SPEED	0.5f
+#define DECREASE_SPEED 0.075f	//	減速速度
+#define BRAKE_SPEED	0.5f		//	ブレーキ速度
+#define INCREASE_SPEED 0.75f	//	加速速度
 
 
 CPlayer::CPlayer(CStage *pStage)
@@ -154,7 +155,7 @@ bool CPlayer::move() {
 	//********************************************************
 	//						モード切替
 	//********************************************************
-	if (GetAsyncKeyState(RKEY_CODE)) {
+	if (GetAsyncKeyState(0x45)) {
 		if (!m_bIsRkeyPress) {
 			if (m_bIsWhiteHallMode) {
 				m_bIsWhiteHallMode = false;
@@ -175,15 +176,29 @@ bool CPlayer::move() {
 	//********************************************************
 	
 	//	前進
-	if (GetAsyncKeyState(VK_UP)) {
-		m_fVX = PLAYER_SPEED * cos;
-		m_fVY = PLAYER_SPEED * sin;
-		m_fDecreaseCos = cos;
-		m_fDecreaseSin = sin;
+	if (GetAsyncKeyState(0x57)) {
+		m_fVX += INCREASE_SPEED * cos;
+		m_fVY += INCREASE_SPEED * sin;
+
+		//	方向を変えてちょん押しすると滑っていくバグ防止のためのif
+		if ((m_fVX < 0 && cos < 0) || (m_fVX > 0 && cos > 0)) {
+			m_fDecreaseCos = cos;
+		}
+		if ((m_fVY < 0 && sin < 0) || (m_fVY > 0 && sin > 0)) {
+			m_fDecreaseSin = sin;
+		}
+		
+
+		if (fabsf(m_fVX) >= fabsf(PLAYER_SPEED * cos)) {
+			m_fVX = PLAYER_SPEED * cos;
+		}
+		if(fabsf(m_fVY) >= fabsf(PLAYER_SPEED * sin)) {
+			m_fVY = PLAYER_SPEED * sin;
+		}
 	}
 
 	//	ブレーキ
-	if (GetAsyncKeyState(VK_DOWN)) {
+	if (GetAsyncKeyState(0x53)) {
 		if (m_fVX > 0) {
 			m_fVX += -BRAKE_SPEED * m_fDecreaseCos;
 			if (m_fVX <= 0)
@@ -207,7 +222,7 @@ bool CPlayer::move() {
 	}
 
 	//	右回転
-	if (GetAsyncKeyState(VK_RIGHT)) {
+	if (GetAsyncKeyState(0x44)) {
 		m_fAngle += ROTATION_SPEED;
 		if (m_fAngle > 2.f * PI) {
 			m_fAngle -= 2.f * PI;
@@ -215,7 +230,7 @@ bool CPlayer::move() {
 	}
 
 	//	左回転
-	if (GetAsyncKeyState(VK_LEFT)) {
+	if (GetAsyncKeyState(0x41)) {
 		m_fAngle -= ROTATION_SPEED;
 		if (m_fAngle < -2.f * PI) {
 			m_fAngle += 2.f * PI;
@@ -239,6 +254,7 @@ bool CPlayer::move() {
 				}
 			}	//	for 
 			m_iShotTimer = SHOT_INTERVAL;
+			CSoundManager::PlayOneShot(0, 1.0f);
 		}	//	if (m_iShotTimer == 0)
 	}
 	//********************************************************
@@ -438,6 +454,23 @@ void CPlayer::CalcDrawCoord(PLAYER_COORDS *playerCoords) {
 		playerCoords->YaxisDraw = DRAW_STATIC_MIN;
 	}
 
+}
+
+
+/**
+*@brief		ドットを回復する
+*/
+void CPlayer::ReviveDot() {
+	if (m_iDotNum == m_iMaxDotNum)
+		return;
+
+	for (int i = 0; i < m_iMaxDotNum; ++i) {
+		if (0 == m_pDots[i]->GetState()) {
+			m_pDots[i]->ReviveDot();
+			m_iDotNum++;
+			return;
+		}
+	}
 }
 
 

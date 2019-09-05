@@ -1,3 +1,8 @@
+/**
+*@file		Shot.h
+*@author	A.Yokoyama
+*@brief		ShotƒNƒ‰ƒX‚ÌéŒ¾
+*/
 #pragma once
 #include "IGameObject.h"
 

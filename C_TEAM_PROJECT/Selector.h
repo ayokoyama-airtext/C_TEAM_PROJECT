@@ -1,6 +1,7 @@
 /**
 * @file Selector.h
 * @brief クラスCSelectorの宣言ファイル
+* @author A.Yokoyama
 */
 #pragma once
 
