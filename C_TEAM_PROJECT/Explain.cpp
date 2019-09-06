@@ -19,12 +19,14 @@ CExplain::CExplain(CSelector *pSystem)
 	m_ePhase = EXPLAIN_INIT;
 	m_iTimer = 0;
 	m_iFadeTimer = 0;
-	//m_pImage = NULL;
 	m_pBlack = NULL;
+	m_bFlag = true;
+	m_bPhaseDone = false;
 
 	pTarget = m_pSystem->GetRenderTarget();
 	if (pTarget) {
-		//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\"), &m_pImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\explain_1.png"), &m_pExplainImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\bg_small.png"), &m_pBGImage);
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBlack);
 		pTarget->Release();
 		pTarget = NULL;
@@ -35,7 +37,8 @@ CExplain::CExplain(CSelector *pSystem)
 
 CExplain::~CExplain()
 {
-	SAFE_RELEASE(m_pImage);
+	SAFE_RELEASE(m_pBGImage);
+	SAFE_RELEASE(m_pExplainImage);
 	SAFE_RELEASE(m_pBlack);
 }
 
@@ -51,28 +54,65 @@ GameSceneResultCode CExplain::move() {
 	case EXPLAIN_INIT:
 		m_iTimer = 0;
 		m_bFlag = true;
-		m_ePhase = EXPLAIN_RUN;
+		m_bPhaseDone = false;
+		m_ePhase = EXPLAIN_RUN_1;
 
-	case EXPLAIN_RUN:
-	{	//	これがないと bDone の初期化でエラーがでる
-		bool bDone = false;
+	case EXPLAIN_RUN_1:
+	{	
 		m_iTimer++;
 
-		if (GetAsyncKeyState(VK_SPACE))
-		{
-			if (!m_bFlag) {
-				bDone = true;
-				m_bFlag = true;
+		if (!m_bPhaseDone) {
+			if (GetAsyncKeyState(VK_RETURN))
+			{
+				if (!m_bFlag) {
+					m_bPhaseDone = true;
+					m_bFlag = true;
+					m_iTimer = 0;
+				}
+			}
+			else
+			{
+				m_bFlag = false;
 			}
 		}
-		else
-		{
-			m_bFlag = false;
+		
+		if (m_bPhaseDone) {
+			if (m_iTimer > 30) {
+				m_iTimer = 0;
+				m_bFlag = true;
+				m_bPhaseDone = false;
+				m_ePhase = EXPLAIN_RUN_2;
+			}
+		}
+		break;
+	}
+
+	case EXPLAIN_RUN_2:
+	{
+		m_iTimer++;
+
+		if (!m_bPhaseDone) {
+			if (GetAsyncKeyState(VK_RETURN))
+			{
+				if (!m_bFlag) {
+					m_bPhaseDone = true;
+					m_bFlag = true;
+					m_iTimer = 0;
+				}
+			}
+			else
+			{
+				m_bFlag = false;
+			}
 		}
 
-		if (bDone) {
-			m_iFadeTimer = 0;
-			m_ePhase = EXPLAIN_FADE;
+		if (m_bPhaseDone) {
+			if (m_iTimer > 60) {
+				m_iTimer = 0;
+				m_bFlag = true;
+				m_bPhaseDone = false;
+				m_ePhase = EXPLAIN_FADE;
+			}
 		}
 		break;
 	}
@@ -99,12 +139,25 @@ void CExplain::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1_RECT_F rc;
 	D2D1_SIZE_F screenSize, textureSize;
 	screenSize = pRenderTarget->GetSize();
-	//textureSize = m_pImage->GetSize();
-	//rc.left  = (screenSize.width - textureSize.width) / 2;	//	センタリング
-	//rc.right = rc.left + textureSize.width;
-	//rc.top = (screenSize.height - textureSize.height) / 2;	//	センタリング
-	//rc.bottom = rc.top + textureSize.height;
-	//pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+	
+	switch (m_ePhase) {
+	case EXPLAIN_RUN_1:
+		rc.left = 0.f; rc.right = screenSize.width;
+		rc.top = 0.f;	rc.bottom = screenSize.height;
+		pRenderTarget->DrawBitmap(m_pExplainImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+
+		if (m_bPhaseDone) {
+			m_pBlack->SetOpacity((FLOAT)(m_iTimer) / 30.f);
+			pRenderTarget->FillRectangle(rc, m_pBlack);
+		}
+		break;
+	case EXPLAIN_RUN_2:
+		rc.left = 0.f; rc.right = screenSize.width;
+		rc.top = 0.f;	rc.bottom = screenSize.height;
+		pRenderTarget->DrawBitmap(m_pBGImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+
+		break;
+	}
 
 
 	switch (m_ePhase) {

@@ -63,6 +63,8 @@ CStage::CStage(CSelector *pSystem)
 #ifdef _DEBUG
 		m_pBrush = NULL;
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
+		m_bPause = false;
+		m_bPauseKey = true;
 #endif // _DEBUG
 
 		SAFE_RELEASE(pTarget);
@@ -156,6 +158,21 @@ GameSceneResultCode CStage::move() {
 		m_ePhase = STAGE_RUN;
 
 	case STAGE_RUN:
+
+#ifdef _DEBUG
+		if (GetAsyncKeyState(VK_UP)) {
+			if (!m_bPauseKey) {
+				m_bPause = (m_bPause == true) ? false : true;
+				m_bPauseKey = true;
+			}
+		}
+		else {
+			m_bPauseKey = false;
+		}
+#endif
+
+		if (m_bPause)
+			return GAMESCENE_DEFAULT;
 
 		if (m_pBG)
 			m_pBG->move();

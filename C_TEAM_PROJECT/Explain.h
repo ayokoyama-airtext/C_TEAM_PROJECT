@@ -8,10 +8,11 @@
 #include "IGameScene.h"
 
 enum EXPLAIN_PHASE {
-	EXPLAIN_INIT = 0x01,
-	EXPLAIN_RUN = 0x02,
-	EXPLAIN_FADE = 0x03,
-	EXPLAIN_DONE = 0x04,
+	EXPLAIN_INIT = 1,
+	EXPLAIN_RUN_1 = 2,
+	EXPLAIN_RUN_2 = 5,
+	EXPLAIN_FADE = 3,
+	EXPLAIN_DONE = 4,
 };
 
 class CSelector;
@@ -29,9 +30,11 @@ public:
 protected:
 	CSelector	*m_pSystem;
 	EXPLAIN_PHASE	m_ePhase;
-	ID2D1Bitmap	*m_pImage;
+	ID2D1Bitmap	*m_pExplainImage;
+	ID2D1Bitmap *m_pBGImage;
 	ID2D1SolidColorBrush	*m_pBlack;
 	bool	m_bFlag;
+	bool	m_bPhaseDone;
 	INT		m_iTimer;
 	INT		m_iFadeTimer;
 };

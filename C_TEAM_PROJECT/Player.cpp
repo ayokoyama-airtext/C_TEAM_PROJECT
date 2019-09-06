@@ -365,13 +365,13 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	
 #ifdef _DEBUG
-	//	ベルト
-	D2D1_ELLIPSE el;
-	el.point.x = m_fDrawX;
-	el.point.y = m_fDrawY;
-	el.radiusX = m_fRad;
-	el.radiusY = m_fRad;
-	pRenderTarget->DrawEllipse(el, m_pBrush);
+	////	ベルト
+	//D2D1_ELLIPSE el;
+	//el.point.x = m_fDrawX;
+	//el.point.y = m_fDrawY;
+	//el.radiusX = m_fRad;
+	//el.radiusY = m_fRad;
+	//pRenderTarget->DrawEllipse(el, m_pBrush);
 
 	//	ドット
 	/*for (int i = 0; i < m_iDotNum; ++i) {
@@ -383,23 +383,23 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 		pRenderTarget->DrawEllipse(el, m_pBrush);
 	}*/
 
-	//	コア
-	D2D1_POINT_2F point;
-	rc.left = m_fDrawX - CORE_LENGTH * 0.5f;
-	rc.right = rc.left + CORE_LENGTH;
-	rc.top = m_fDrawY - CORE_LENGTH * 0.5f;
-	rc.bottom = rc.top + CORE_LENGTH;
-	point.x = rc.left + CORE_LENGTH * 0.5f;
-	point.y = rc.top + CORE_LENGTH * 0.5f;
-	D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(angle, point);
-	pRenderTarget->SetTransform(rotate);
-
-	pRenderTarget->DrawRectangle(rc, m_pBrush);
-
-	rc.bottom = rc.top + CORE_LENGTH * 0.2f;
-	pRenderTarget->DrawRectangle(rc, m_pRedBrush);
-
-	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+//	//	コア
+//	D2D1_POINT_2F point;
+//	rc.left = m_fDrawX - CORE_LENGTH * 0.5f;
+//	rc.right = rc.left + CORE_LENGTH;
+//	rc.top = m_fDrawY - CORE_LENGTH * 0.5f;
+//	rc.bottom = rc.top + CORE_LENGTH;
+//	point.x = rc.left + CORE_LENGTH * 0.5f;
+//	point.y = rc.top + CORE_LENGTH * 0.5f;
+//	D2D1::Matrix3x2F rotate = D2D1::Matrix3x2F::Rotation(angle, point);
+//	pRenderTarget->SetTransform(rotate);
+//
+//	pRenderTarget->DrawRectangle(rc, m_pBrush);
+//
+//	rc.bottom = rc.top + CORE_LENGTH * 0.2f;
+//	pRenderTarget->DrawRectangle(rc, m_pRedBrush);
+//
+//	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 #endif
 }
 

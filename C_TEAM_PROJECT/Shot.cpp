@@ -116,12 +116,12 @@ void CShot::draw(ID2D1RenderTarget *pRenderTarget) {
 	pRenderTarget->DrawBitmap(m_pImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
 
 #ifdef _DEBUG
-	D2D1_ELLIPSE el;
+	/*D2D1_ELLIPSE el;
 	el.point.x = playerDrawX + m_fX - playerX;
 	el.point.y = playerDrawY + m_fY - playerY;
 	el.radiusX = m_fRad;
 	el.radiusY = m_fRad;
-	pRenderTarget->FillEllipse(el, m_pBrush);
+	pRenderTarget->FillEllipse(el, m_pBrush);*/
 #endif
 }
 

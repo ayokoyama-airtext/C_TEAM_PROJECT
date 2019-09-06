@@ -298,6 +298,7 @@ bool CEnemyBoss::move() {
 
 			}	//switch (attackNum)
 
+			CSoundManager::PlayOneShot(0, 0.75f);
 		}	//	if (m_iAttackTimer % ATTACK_INTERVAL == 0) 
 
 		if (++m_iAttackTimer > ATTACK_INTERVAL * 2) {

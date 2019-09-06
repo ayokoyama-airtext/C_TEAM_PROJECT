@@ -103,6 +103,8 @@ protected:
 
 #ifdef _DEBUG
 	ID2D1SolidColorBrush	*m_pBrush;
+	bool	m_bPause;
+	bool	m_bPauseKey;
 #endif
 };
 

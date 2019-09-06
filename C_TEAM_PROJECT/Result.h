@@ -37,6 +37,7 @@ protected:
 	ID2D1Bitmap *m_pTextTimeImage;
 	ID2D1Bitmap *m_pBackToTitleImage;
 	ID2D1Bitmap *m_pTextBackToTitleImage;
+	ID2D1Bitmap	*m_pTextResultImage;
 
 
 	ID2D1SolidColorBrush	*m_pBlack;

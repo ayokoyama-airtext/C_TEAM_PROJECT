@@ -44,6 +44,7 @@ CResult::CResult(CSelector *pSystem)
 		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\text_time.png"), &m_pTextTimeImage);
 		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\back_to_title_button3.png"), &m_pBackToTitleImage);
 		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\sampletext.png"), &m_pTextBackToTitleImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, _T("res\\text_result.png"), &m_pTextResultImage);
 
 
 
@@ -58,6 +59,7 @@ CResult::CResult(CSelector *pSystem)
 
 CResult::~CResult()
 {
+	SAFE_RELEASE(m_pTextResultImage);
 	SAFE_RELEASE(m_pTextTimeImage);
 	SAFE_RELEASE(m_pBackToTitleImage);
 	SAFE_RELEASE(m_pTextBackToTitleImage);
@@ -167,6 +169,12 @@ void CResult::draw(ID2D1RenderTarget *pRenderTarget) {
 	pRenderTarget->DrawBitmap(m_pBGImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
 
 
+	//	Result
+	textureSize = m_pTextResultImage->GetSize();
+	rc.top = (180.f - textureSize.height); rc.bottom = rc.top + textureSize.height * 2.f;
+	rc.left = (screenSize.width - textureSize.width * 2.f) * 0.5f; rc.right = rc.left + textureSize.width * 2.f;
+	pRenderTarget->DrawBitmap(m_pTextResultImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+
 	//	Time
 	{
 		int sec = m_iEndTime / 60;
@@ -214,33 +222,8 @@ void CResult::draw(ID2D1RenderTarget *pRenderTarget) {
 
 	}
 
-	//	Rank
-	{
-		int rank = m_iScore / 10000;
-		rank = (rank > 5) ? 5 : rank;
-		src.left = 0.f; src.right = 96.f; src.top = 0.f; src.bottom = 96.f;
-		for (int i = 0; i < rank; ++i) {
-			rc.left = 560.f + 288.f * i;
-			rc.right = rc.left + 192.f;
-			rc.top = 710.f;
-			rc.bottom = rc.top + 192.f;
-			pRenderTarget->DrawBitmap(m_pRankImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
-		}
-
-		float h = 410.f;
-		float w = 300.f;
-
-		rc.left = 560.f - (144.f + w);
-		rc.right = rc.left + w;
-		rc.top = (806.f - h * 0.5f) + 10.f;
-		rc.bottom = rc.top + h;
-
-		pRenderTarget->DrawBitmap(m_pTextRankImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
-	}
-
 	//	Score
 	{
-
 
 		int score = m_iScore;
 		rc.left = 1920 - 720.f;
@@ -266,6 +249,31 @@ void CResult::draw(ID2D1RenderTarget *pRenderTarget) {
 
 		pRenderTarget->DrawBitmap(m_pScoreImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
 	}
+
+	//	Rank
+	{
+		int rank = m_iScore / 10000;
+		rank = (rank > 5) ? 5 : rank;
+		src.left = 0.f; src.right = 96.f; src.top = 0.f; src.bottom = 96.f;
+		for (int i = 0; i < rank; ++i) {
+			rc.left = 560.f + 288.f * i;
+			rc.right = rc.left + 192.f;
+			rc.top = 710.f;
+			rc.bottom = rc.top + 192.f;
+			pRenderTarget->DrawBitmap(m_pRankImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		}
+
+		float h = 410.f;
+		float w = 300.f;
+
+		rc.left = 560.f - (144.f + w);
+		rc.right = rc.left + w;
+		rc.top = (806.f - h * 0.5f) + 10.f;
+		rc.bottom = rc.top + h;
+
+		pRenderTarget->DrawBitmap(m_pTextRankImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, NULL);
+	}
+
 
 
 	switch (m_ePhase) {

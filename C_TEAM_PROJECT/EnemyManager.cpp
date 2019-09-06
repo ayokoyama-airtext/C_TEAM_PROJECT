@@ -186,8 +186,8 @@ void CEnemyManager::DecreaseEnemyCount() {
 
 //	PITCH : 2 -> Wave番号, エネミー種類(100:Boss), ドット数
 SHORT CEnemyManager::m_pEnemySetData[] = {
-	/*0, 1, 5,
-	0, 1, 1,
+	0, 1, 5,
+	/*0, 1, 1,
 	0, 1, 1,
 	1, 1, 2,
 	1, 1, 2,
@@ -195,7 +195,7 @@ SHORT CEnemyManager::m_pEnemySetData[] = {
 	2, 1, 2,
 	2, 1, 3,
 	2, 1, 4,*/
-	0, 100, 0,
+	/*0, 100, 0,*/
 };
 
 size_t CEnemyManager::m_szEnemySetDataSize = sizeof(CEnemyManager::m_pEnemySetData) / sizeof(SHORT);
