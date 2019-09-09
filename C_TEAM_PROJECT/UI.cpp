@@ -55,9 +55,7 @@ CUI::CUI(CStage *pStage)
 	if (pTarget) {
 		//CTextureLoader::CreateD2D1BitmapFromFile(pTarget, UI_FILE_NAME, &m_pImage);
 
-#ifdef _DEBUG
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
-#endif // _DEBUG
 
 		SAFE_RELEASE(pTarget);
 	}
@@ -68,9 +66,7 @@ CUI::~CUI()
 {
 	SAFE_RELEASE(m_pImage);
 
-#ifdef _DEBUG
 	SAFE_RELEASE(m_pBrush);
-#endif // _DEBUG
 
 	SAFE_RELEASE(m_pTextFormat);
 }

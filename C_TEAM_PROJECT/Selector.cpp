@@ -16,8 +16,7 @@
 #include "TextureLoader.h"
 
 
-#define SOUND_SHOT _T("res\\sound\\shoot.wav")
-#define BGM_STAGE	_T("res\\sound\\stage.wav")
+
 
 CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 {
@@ -86,19 +85,16 @@ CSelector::CSelector(ID2D1RenderTarget *pRenderTarget)
 	}
 #endif
 
-
-	//	sound
-	CSoundManager::LoadOneShot(SOUND_SHOT);
-	CSoundManager::LoadStreamSound(BGM_STAGE, true);
 }
 
 
 CSelector::~CSelector()
 {
+	CSoundManager::DoneStreamSound(0);
+	CTextureLoader::Destroy();
 	CSoundManager::Finalize();
 	SAFE_DELETE(m_pScene);
 	SAFE_RELEASE(m_pRenderTarget);
-	CTextureLoader::Destroy();
 
 #ifdef _DEBUG
 	SAFE_RELEASE(m_pRedBrush);
@@ -118,6 +114,8 @@ void CSelector::doAnim() {
 
 	switch (m_eGamePhase) {
 	case GAMEPHASE_INIT:
+#ifdef _DEBUG
+
 		if (GetAsyncKeyState(VK_RETURN)) {
 			m_eGamePhase = GAMEPHASE_GAME;
 			m_pScene = new CStage(this);
@@ -137,8 +135,6 @@ void CSelector::doAnim() {
 
 		if (move < 0)
 			break;
-
-		m_eGamePhase = GAMEPHASE_RESET;
 
 #ifdef hikegami
 		m_eGamePhase = GAMEPHASE_TITLE;
@@ -164,14 +160,20 @@ void CSelector::doAnim() {
 		m_pScene = new CStage(this);
 #endif
 
+#endif // _DEBUG
+
+		m_eGamePhase = GAMEPHASE_RESET;
+
 		break;
 
 	case GAMEPHASE_RESET:
-		CSoundManager::PlayStreamSound(0, 1.0f);
+		CSoundManager::Finalize();
 		m_iEndTime = 0;
 		m_iEndScore = 0;
 		SAFE_DELETE(m_pScene);
 		m_pScene = new CTitle(this);
+		CSoundManager::LoadStreamSound(BGM_TITLE_FILE, true);
+		CSoundManager::PlayStreamSound(0, 1.0f);
 		m_eGamePhase = GAMEPHASE_TITLE;
 
 	case GAMEPHASE_TITLE:
@@ -191,6 +193,7 @@ void CSelector::doAnim() {
 			break;
 
 		SAFE_DELETE(m_pScene);
+		CSoundManager::Finalize();
 		m_pScene = new CStage(this);
 		m_eGamePhase = GAMEPHASE_GAME;
 
@@ -201,6 +204,9 @@ void CSelector::doAnim() {
 			break;
 
 		SAFE_DELETE(m_pScene);
+		CSoundManager::Finalize();
+		CSoundManager::LoadStreamSound(BGM_RESULT_FILE, true);
+		CSoundManager::PlayStreamSound(0, 1.0f);
 		if (rc == GAMESCENE_END_FAILURE) {
 			m_pScene = new CGameOver(this);
 			m_eGamePhase = GAMEPHASE_GAMEOVER;
@@ -320,6 +326,7 @@ ID2D1RenderTarget *CSelector::GetRenderTarget() {
 	return m_pRenderTarget;
 }
 
+#ifdef _DEBUG
 /**
 * @method
 * @brief	デバッグ用のTextFormat を返す
@@ -329,3 +336,4 @@ IDWriteTextFormat *CSelector::GetTextFormat() {
 	m_pTextFormat->AddRef();
 	return m_pTextFormat;
 }
+#endif

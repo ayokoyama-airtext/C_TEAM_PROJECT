@@ -31,15 +31,20 @@ public:
 	virtual void damage(float amount) override;
 
 	virtual void ReviveDot();
+	virtual void IncGrowthNum();
 	virtual void setPos(float x, float y, float r);
 protected:
 	CStage	*m_pParent;
 	ID2D1Bitmap	*m_pCoreImage;
 	ID2D1Bitmap	*m_pBeltImage;
+	ID2D1Bitmap	*m_pDestroyImage;
 	
 	INT		m_iTimer;
 	INT		m_iDamagedTimer;
 	INT		m_iShotTimer;
+	INT		m_iDestroyTimer;
+	INT		m_iRespawnAnimTimer;
+
 	FLOAT	m_fDrawX;		//	x座標(描画上の)
 	FLOAT	m_fDrawY;		//	y座標(描画上の)
 	FLOAT	m_fX;			//	x座標(データ上の)
@@ -52,6 +57,7 @@ protected:
 	FLOAT	m_fScale;		//	大きさ(基本1.0f)
 	INT		m_iDotNum;		//	生きてるドットの数
 	INT		m_iMaxDotNum;	//	ドットの最大個数(成長するとこれが増える)(最大8?)
+	INT		m_iGrowthNum;	//	近接モードで食べた数
 
 	FLOAT	m_fDecreaseCos;	//	減速用のcos
 	FLOAT	m_fDecreaseSin;	//	減速用のsin
@@ -63,6 +69,7 @@ protected:
 
 	//	連打防止フラグ
 	bool	m_bIsRkeyPress;
+	bool	m_bExplosionSound;
 
 	//	フィールド幅高
 	FLOAT m_fFieldWidth;
@@ -75,11 +82,11 @@ protected:
 	//	定数
 	static const int PLAYER_START_X = 2880;
 	static const int PLAYER_START_Y = 2880;
-	static const int START_DOT_NUM = 5;
-	static const int START_MAX_DOT_NUM = 5;
 	static const int BELT_RAD = 96;		//	ベルト半径
 	static const int DOT_RAD = 24;			//	ドット半径
 	static const int CORE_LENGTH = 96;		//	コアの一辺の長さ
+	static const int START_DOT_NUM = 3;
+
 	static const float ROTATION_SPEED;		//	回転速度
 	static const float PLAYER_SPEED;		//	移動最高速度
 	static const int DAMAGED_DURATION = 90;	//	無敵時間

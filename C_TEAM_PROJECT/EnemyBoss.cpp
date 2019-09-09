@@ -21,13 +21,15 @@
 
 const float CEnemyBoss::ROTATION_SPEED = 0.005f;
 const float CEnemyBoss::ENEMY_SPEED = 1.5f;
-const float CEnemyBoss::ENEMY_ESCAPE_SPEED = 8.f;
+const float CEnemyBoss::ENEMY_CHASE_SPEED = 4.5f;
 const float CEnemyBoss::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
 const float CEnemyBoss::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
 const float CEnemyBoss::SEARCH_ANGLE = cosf(PI * 0.5f);
 const float CEnemyBoss::BULLET_ANGLE_GAP_BIG = PI / 6.f;
 const float CEnemyBoss::BULLET_ANGLE_GAP_SMALL = PI / 24.f;
 
+//	ボスの攻撃パターン(1セット)
+INT CEnemyBoss::m_iAttackSet[] = { 0, 0, 1, 1, 1, 2,};
 
 FLOAT CEnemyBoss::m_pRandomMove[] = { 0.f, -1.f, 1.f, -1.f, 1.f };
 FLOAT CEnemyBoss::m_pTexCoord[] = { 0.f, 480.f, 960.f };
@@ -55,6 +57,10 @@ CEnemyBoss::CEnemyBoss(float x, float y, float scale)
 	m_fCoreRad = (FLOAT)(CORE_LENGTH >> 1);
 	m_fScale = scale;
 	m_iMaxDotNum = 24;
+
+	m_iAttackSetIndex = _countof(m_iAttackSet);
+	m_iAttackNumber = 0;
+
 	m_iDotNum = m_iMaxDotNum;
 	m_fAngle = PI * 0.5f;
 	m_iRandomMoveIndex = 0;
@@ -233,6 +239,16 @@ bool CEnemyBoss::move() {
 
 		if (m_iTimer <= 0) {
 			m_iAttackTimer = 0;
+
+			//	m_iAttackSetから攻撃行動番号をランダムに被りなく取り出す
+			int num = (rand() >> 4) % m_iAttackSetIndex;
+			m_iAttackNumber = m_iAttackSet[num];
+			m_iAttackSet[num] = m_iAttackSet[--m_iAttackSetIndex];
+			m_iAttackSet[m_iAttackSetIndex] = m_iAttackNumber;
+
+			if (m_iAttackSetIndex == 0)
+				m_iAttackSetIndex = _countof(m_iAttackSet);
+
 			m_iBehaviorFlag = EFLAG_ATTACK;
 		}
 	}
@@ -241,7 +257,7 @@ bool CEnemyBoss::move() {
 
 	case EFLAG_ATTACK:	//	攻撃
 	{
-		if (m_iAttackTimer % ATTACK_INTERVAL == 0) {
+		/*if (m_iAttackTimer % ATTACK_INTERVAL == 0) {
 			float l = 1.f / sqrtf(vx * vx + vy * vy);
 			float sin = vy * l;
 			float cos = vx* l;
@@ -304,6 +320,17 @@ bool CEnemyBoss::move() {
 		if (++m_iAttackTimer > ATTACK_INTERVAL * 2) {
 			m_iTimer = MOVE_DURATION + 120;
 			m_iBehaviorFlag = EFLAG_MOVE;
+		}*/
+		switch (m_iAttackNumber) {
+		case 0:
+			Attack1(vx, vy);
+			break;
+		case 1:
+			Attack2(vx, vy);
+			break;
+		case 2:
+			Attack3(vx, vy);
+			break;
 		}
 	}
 	break;
@@ -610,6 +637,145 @@ void CEnemyBoss::damage(float amount) {
 	else {
 		m_bDamaged = true;
 		m_iDestroyAnimTimer--;
+		CSoundManager::PlayOneShot(SE_EXPLOSION_BOSS, 1.0f);
+		m_pParent->SetClearFlag();
+	}
+}
+
+
+/**
+*@brief		扇状に弾を三度放つ
+@param [in] vx/vy	プレイヤーとの相対ベクトル
+*/
+void CEnemyBoss::Attack1(float vx, float vy) {
+	if (m_iAttackTimer % ATTACK_INTERVAL == 0) {
+		float l = 1.f / sqrtf(vx * vx + vy * vy);
+		float sin = vy * l;
+		float cos = vx * l;
+		float angle = atan2(sin, cos);
+
+		int attackNum = (m_iAttackTimer / ATTACK_INTERVAL);
+		switch (attackNum) {
+		case 0:
+		{
+			CBullet *bullet = NULL;
+			bullet = new CBullet(m_fX, m_fY, angle);
+			m_pParent->AddBullet(bullet);
+			for (int i = 0; i < 2; ++i) {
+				float bulletAngle = angle + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+				bullet = new CBullet(m_fX, m_fY, bulletAngle);
+				m_pParent->AddBullet(bullet);
+			}
+		}
+		break;
+
+		case 1:
+		{
+			CBullet *bullet = NULL;
+			bullet = new CBullet(m_fX, m_fY, angle);
+			m_pParent->AddBullet(bullet);
+			for (int i = 0; i < 2; ++i) {
+				float bulletAngle = angle + BULLET_ANGLE_GAP_BIG * 2.f + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+				bullet = new CBullet(m_fX, m_fY, bulletAngle);
+				m_pParent->AddBullet(bullet);
+
+				bulletAngle = angle - BULLET_ANGLE_GAP_BIG * 2.f + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+				bullet = new CBullet(m_fX, m_fY, bulletAngle);
+				m_pParent->AddBullet(bullet);
+			}
+		}
+		break;
+
+		case 2:
+		{
+			CBullet *bullet = NULL;
+			bullet = new CBullet(m_fX, m_fY, angle);
+			m_pParent->AddBullet(bullet);
+			for (int i = 0; i < 2; ++i) {
+				float bulletAngle = angle + BULLET_ANGLE_GAP_BIG + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+				bullet = new CBullet(m_fX, m_fY, bulletAngle);
+				m_pParent->AddBullet(bullet);
+
+				bulletAngle = angle - BULLET_ANGLE_GAP_BIG + BULLET_ANGLE_GAP_SMALL * (1 - i * 2);
+				bullet = new CBullet(m_fX, m_fY, bulletAngle);
+				m_pParent->AddBullet(bullet);
+			}
+		}
+		break;
+
+		}	//switch (attackNum)
+
+		CSoundManager::PlayOneShot(SE_SHOT, 0.75f);
+	}	//	if (m_iAttackTimer % ATTACK_INTERVAL == 0) 
+
+	if (++m_iAttackTimer > ATTACK_INTERVAL * 2) {
+		m_iTimer = MOVE_DURATION + 120;
+		m_iBehaviorFlag = EFLAG_MOVE;
+	}
+}
+
+/**
+*@brief		プレイヤー位置へ弾を速射する
+@param [in] vx/vy	プレイヤーとの相対ベクトル
+@note	プレイヤーの未来位置を計算して弾の発射角度を決めている
+*/
+void CEnemyBoss::Attack2(float vx, float vy) {
+	if (m_iAttackTimer % 5 == 0) {
+		float pVX = m_pParent->playerCoords.playerVX, pVY = m_pParent->playerCoords.playerVY;
+		float l = sqrtf(vx * vx + vy * vy);
+		int hitFrame = (int)l / (int)BULLET_SPEED;	//	弾の到達にかかる時間(frame)
+
+		float eVX = vx + pVX * hitFrame, eVY = vy + pVY * hitFrame;	//	相対ベクトルをプレイヤーの未来位置で再計算
+		l = 1.f / sqrtf(eVX * eVX + eVY * eVY);
+
+		float sin = eVY * l;
+		float cos = eVX * l;
+		float angle = atan2(sin, cos);
+
+		CBullet *bullet = NULL;
+		bullet = new CBullet(m_fX, m_fY, angle);
+		m_pParent->AddBullet(bullet);
+
+		CSoundManager::PlayOneShot(SE_SHOT, 0.75f);
+	}	//	if (m_iAttackTimer % ATTACK_INTERVAL == 0) 
+
+	if (++m_iAttackTimer > ATTACK_INTERVAL * 2) {
+		m_iTimer = MOVE_DURATION + 120;
+		m_iBehaviorFlag = EFLAG_MOVE;
+	}
+}
+
+/**
+*@brief		中心から扇状に弾を発射する
+@param [in] vx/vy	プレイヤーとの相対ベクトル
+*/
+void CEnemyBoss::Attack3(float vx, float vy) {
+	if (m_iAttackTimer % (ATTACK_INTERVAL + 15) == 0) {
+		float pVX = m_pParent->playerCoords.playerVX, pVY = m_pParent->playerCoords.playerVY;
+		float l = sqrtf(vx * vx + vy * vy);
+		int hitFrame = (int)l / (int)BULLET_SPEED;	//	弾の到達にかかる時間(frame)
+
+		float eVX = vx + pVX * hitFrame, eVY = vy + pVY * hitFrame;	//	相対ベクトルをプレイヤーの未来位置で再計算
+		l = 1.f / sqrtf(eVX * eVX + eVY * eVY);
+
+		float sin = eVY * l;
+		float cos = eVX * l;
+		float angle = atan2(sin, cos);
+
+		for (int i = 0; i < 9; ++i) {
+			float bAngle = angle + (4 - i) * BULLET_ANGLE_GAP_SMALL;
+			CBullet *bullet = NULL;
+			bullet = new CBullet(m_fX, m_fY, bAngle);
+			m_pParent->AddBullet(bullet);
+		}
+
+
+		CSoundManager::PlayOneShot(SE_SHOT, 0.75f);
+	}	//	if (m_iAttackTimer % ATTACK_INTERVAL == 0) 
+
+	if (++m_iAttackTimer > ATTACK_INTERVAL * 2) {
+		m_iTimer = MOVE_DURATION + 120;
+		m_iBehaviorFlag = EFLAG_MOVE;
 	}
 }
 

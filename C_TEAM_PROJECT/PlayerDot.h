@@ -41,6 +41,7 @@ protected:
 	INT		m_iNumber;	//	ドットの番号
 	INT		m_iTimer;
 	INT		m_iDestroyAnimTimer;
+	INT		m_iRespawnAnimTimer;
 
 	//	定数
 	static const int	DEFAULT_RAD = 24;	//	デフォルト半径

@@ -29,13 +29,19 @@ public:
 	virtual void draw(ID2D1RenderTarget *pRenderTarget) override;
 protected:
 	CSelector	*m_pSystem;
-	EXPLAIN_PHASE	m_ePhase;
-	ID2D1Bitmap	*m_pExplainImage;
+	ID2D1Bitmap	*m_pExplainImages[14];
 	ID2D1Bitmap *m_pBGImage;
+	ID2D1Bitmap *m_pExplainArrowImages[3];
+	EXPLAIN_PHASE	m_ePhase;
 	ID2D1SolidColorBrush	*m_pBlack;
 	bool	m_bFlag;
 	bool	m_bPhaseDone;
 	INT		m_iTimer;
 	INT		m_iFadeTimer;
+	INT		m_iPageNum;
+	INT		m_iOldPageNum;
+
+	static const wchar_t	fileNames[][64];
+	static const wchar_t	arrowNames[][64];
 };
 

@@ -44,8 +44,8 @@ bool CEnemyBossDot::move() {
 	float parentY = m_pParent->GetY();
 	float parentRad = m_pParent->GetRad();
 
-	m_fX = parentX + parentRad * cosf(m_fAngle);
-	m_fY = parentY + parentRad * sinf(m_fAngle);
+	m_fX = parentX + (parentRad + 12.f) * cosf(m_fAngle);
+	m_fY = parentY + (parentRad + 12.f) * sinf(m_fAngle);
 
 	return true;
 }

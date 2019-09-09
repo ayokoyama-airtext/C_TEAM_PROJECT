@@ -22,10 +22,14 @@
 const FLOAT CStage::FIELD_WIDTH = 1920.f * 3.f;
 const FLOAT CStage::FIELD_HEIGHT = 1920.f * 3.f;
 
+#define FADE_TIME 120
+#define BGM_CHANGE_TIME 60
+
 CStage::CStage(CSelector *pSystem)
 {
 	m_pSystem = pSystem;
 	m_iTimer = 0;
+	m_iBGMChangeTimer = -1;
 	m_iScore = 0;
 	m_iGameFinishState = 0;
 	m_pBoss = NULL;
@@ -70,6 +74,14 @@ CStage::CStage(CSelector *pSystem)
 		SAFE_RELEASE(pTarget);
 	}
 
+	CSoundManager::LoadStreamSound(BGM_STAGE_FILE, true);
+	CSoundManager::LoadStreamSound(BGM_BOSS_FILE, true);
+	CSoundManager::LoadOneShot(SE_SHOT_FILE);
+	CSoundManager::LoadOneShot(SE_EXPLOSION_FILE);
+	CSoundManager::LoadOneShot(SE_EXPLOSION_BOSS_FILE);
+
+	CSoundManager::PlayStreamSound(BGM_STAGE, 1.0f);
+	m_iCurrentBGMNum = BGM_STAGE;
 }
 
 
@@ -155,6 +167,9 @@ GameSceneResultCode CStage::move() {
 
 	switch (m_ePhase) {
 	case STAGE_INIT:
+		if (m_iTimer < 30)
+			break;
+		m_iTimer = 0;
 		m_ePhase = STAGE_RUN;
 
 	case STAGE_RUN:
@@ -169,10 +184,24 @@ GameSceneResultCode CStage::move() {
 		else {
 			m_bPauseKey = false;
 		}
-#endif
 
 		if (m_bPause)
 			return GAMESCENE_DEFAULT;
+#endif
+
+		//	BGM変更
+		if (m_iBGMChangeTimer >= 0) {
+			if (--m_iBGMChangeTimer < 0) {
+				int id = (m_iCurrentBGMNum == BGM_STAGE) ? BGM_BOSS : BGM_STAGE;
+				CSoundManager::DoneStreamSound(m_iCurrentBGMNum);
+				CSoundManager::PlayStreamSound(id, 1.0f);
+				m_iCurrentBGMNum = id;
+			}
+			else {
+				CSoundManager::SetVolumeStreamSound(m_iCurrentBGMNum, ((float)m_iBGMChangeTimer / (float)BGM_CHANGE_TIME));
+			}
+		}
+
 
 		if (m_pBG)
 			m_pBG->move();
@@ -326,6 +355,7 @@ GameSceneResultCode CStage::move() {
 						if (playerCoords.playerIsWHmode == false) {
 							(*eIt)->damage(1.0f);
 							(*eIt)->SetFlag(SET_FLG_DOT_DAMAGED);
+							m_pPlayer->IncGrowthNum();
 						}
 						else {
 							(*pIt)->damage(1.0f);
@@ -352,6 +382,7 @@ GameSceneResultCode CStage::move() {
 							(*it2)->damage(1.0f);
 							if (0 == (*it2)->GetState()) {
 								m_pPlayer->ReviveDot();
+								m_pPlayer->IncGrowthNum();
 								m_iScore += (*it2)->GetScore();
 							}
 						}
@@ -459,7 +490,8 @@ GameSceneResultCode CStage::move() {
 		break;
 
 	case STAGE_DONE:
-		if (m_iTimer < 120)
+		CSoundManager::SetVolumeStreamSound(m_iCurrentBGMNum, (1.f - ((float)m_iTimer / (float)FADE_TIME)));
+		if (m_iTimer < FADE_TIME)
 			break;
 
 		if (m_iGameFinishState & GAME_CLEAR) {
@@ -534,7 +566,7 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 		rc.top = 0.f;
 		rc.right = screen.width;
 		rc.bottom = screen.height;
-		float opacity = m_iTimer / 120.f;
+		float opacity = (float)m_iTimer / (float)FADE_TIME;
 		m_pBlackBrush->SetOpacity(opacity);
 		pRenderTarget->FillRectangle(rc, m_pBlackBrush);
 	}
@@ -570,6 +602,23 @@ void CStage::draw(ID2D1RenderTarget *pRenderTarget) {
 
 }
 
+
+/**
+*@brief		bossをセットする
+*/
+void CStage::SetBoss(CEnemyBoss *pBoss)
+{
+	m_pBoss = pBoss;
+	m_iBGMChangeTimer = BGM_CHANGE_TIME;
+}
+
+/**
+*@brief		bossを外す
+*/
+void CStage::RemoveBoss() {
+	m_pBoss = NULL;
+	m_iBGMChangeTimer = BGM_CHANGE_TIME;
+}
 
 /***********************************************
 *@method

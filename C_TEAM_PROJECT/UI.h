@@ -21,9 +21,7 @@ protected:
 	UINT	m_iScore;	//	スコア
 	UINT	m_iTimer;	//	経過時間
 
-#ifdef _DEBUG
 	ID2D1SolidColorBrush	*m_pBrush;	//	デバッグ用のブラシ
-#endif // _DEBUG
 
 };
 

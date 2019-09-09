@@ -68,9 +68,9 @@ protected:
 
 	
 	struct {
-		BOOL m_bThreadActive;
-		BOOL m_bThreadDone;
-		BOOL m_bStopCommand;
+		volatile BOOL m_bThreadActive;
+		volatile BOOL m_bThreadDone;
+		volatile BOOL m_bStopCommand;
 	}ThreadFlags;												//!<	ThreadFlags
 
 	CRITICAL_SECTION m_CriticalSection;							//!<	CriticalSection

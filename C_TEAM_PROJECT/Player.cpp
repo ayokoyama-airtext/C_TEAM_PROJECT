@@ -16,6 +16,7 @@
 
 #define PLAYER_FILE_NAME		_T("res\\player_core.png")
 #define PLAYER_BELT_FILE_NAME	_T("res\\belt.png")
+#define PLAYER_DESTROY_FILE_NAME	_T("res\\player_destroy.png")
 float CPlayer::m_pTextureCoord[] = { 0.f, 96.f, 192.f };
 const float CPlayer::ROTATION_SPEED = 0.05f;
 const float CPlayer::PLAYER_SPEED = 10.f;
@@ -30,19 +31,25 @@ CPlayer::CPlayer(CStage *pStage)
 	m_pParent = pStage;
 	m_pCoreImage = NULL;
 	m_pBeltImage = NULL;
+	m_pDestroyImage = NULL;
+
 	m_iTimer = 0;
 	m_iDamagedTimer = 0;
 	m_iShotTimer = 0;
+	m_iDestroyTimer = 24;
+	m_iRespawnAnimTimer = 12;
+
 	m_fX = (FLOAT)PLAYER_START_X;
 	m_fY = (FLOAT)PLAYER_START_Y;
 	m_fVX = 0;
 	m_fVY = 0;
 	m_fRad = (FLOAT)BELT_RAD;
-	m_fCoreRad = (FLOAT)(CORE_LENGTH >> 1);
+	m_fCoreRad = (FLOAT)(BELT_RAD >> 1) + (FLOAT)(BELT_RAD >> 2);
 	m_fAngle = -PI * 0.5f;
 	m_fScale = 1.0f;
-	m_iDotNum = START_DOT_NUM;
-	m_iMaxDotNum = START_MAX_DOT_NUM;
+	m_iMaxDotNum = START_DOT_NUM;
+	m_iDotNum = m_iMaxDotNum;
+	m_iGrowthNum = 0;
 
 	m_fDecreaseCos = 0.f;
 	m_fDecreaseSin = 0.f;
@@ -50,6 +57,7 @@ CPlayer::CPlayer(CStage *pStage)
 	m_bDamaged = false;
 	m_bIsWhiteHallMode = false;
 	m_bIsRkeyPress = true;
+	m_bExplosionSound = false;
 
 	m_fFieldWidth = m_pParent->FIELD_WIDTH;
 	m_fFieldHeight = m_pParent->FIELD_HEIGHT;
@@ -67,6 +75,7 @@ CPlayer::CPlayer(CStage *pStage)
 	if (pTarget) {
 		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYER_FILE_NAME, &m_pCoreImage);
 		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYER_BELT_FILE_NAME, &m_pBeltImage);
+		CTextureLoader::CreateD2D1BitmapFromFile(pTarget, PLAYER_DESTROY_FILE_NAME, &m_pDestroyImage);
 
 #ifdef _DEBUG
 		pTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pBrush);
@@ -82,6 +91,7 @@ CPlayer::CPlayer(CStage *pStage)
 
 CPlayer::~CPlayer()
 {
+	SAFE_RELEASE(m_pDestroyImage);
 	SAFE_RELEASE(m_pBeltImage);
 	SAFE_RELEASE(m_pCoreImage);
 
@@ -96,6 +106,11 @@ CPlayer::~CPlayer()
 *@brief	アニメーションメソッド
 */
 bool CPlayer::move() {
+
+	//--------------------------------------------------------
+	//					リスポーン/死亡処理
+	//--------------------------------------------------------
+
 	//	ドットの残り数を確認
 	{
 		m_iDotNum = 0;
@@ -107,19 +122,32 @@ bool CPlayer::move() {
 	}
 
 	if (m_iDotNum <= 0) {
+		m_bDamaged = true;
+	}
+
+	if (m_bDamaged) {
+		if (m_bExplosionSound == false) {
+			CSoundManager::PlayOneShot(SE_EXPLOSION, 1.0f);
+			m_bExplosionSound = true;
+		}
+		if (--m_iDestroyTimer >= 0) {
+			return true;
+		}
 		return false;
 	}
 
+	if (m_iRespawnAnimTimer >= 0)
+		m_iRespawnAnimTimer--;
+
+	//--------------------------------------------------------
+	//					通常処理
+	//--------------------------------------------------------
 
 	m_iTimer = (m_iTimer + 1) % 54;
 
 	float cos = cosf(m_fAngle);
 	float sin = sinf(m_fAngle);
 
-	
-	if (m_bDamaged) {
-		return false;
-	}
 
 
 	//	自動減速
@@ -323,6 +351,72 @@ void CPlayer::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(angle, center);
 	pRenderTarget->SetTransform(rotation);	//	回転
 
+	//	destroy animation
+	if (m_bDamaged) {
+		if (m_iDestroyTimer < 0) {
+			pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+			return;
+		}
+
+		int timer = 23 - m_iDestroyTimer;
+		int tex = (timer % 12) >> 2;
+
+		src.left = 96.f * tex;
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		if (timer < 12) {
+			rc.left = m_fDrawX - 48.f;
+			rc.right = rc.left + 96.f;
+			rc.top = (m_fDrawY - 42.f) - 48.f;
+			rc.bottom = rc.top + 96.f;
+			pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		}
+		else {
+			rc.left = (m_fDrawX - 24.f) - 48.f;
+			rc.right = rc.left + 96.f;
+			rc.top = (m_fDrawY + 36.f) - 48.f;
+			rc.bottom = rc.top + 96.f;
+			pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+			rc.left = (m_fDrawX + 24.f) - 48.f;
+			rc.right = rc.left + 96.f;
+			pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		}
+
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
+
+	//	respawn animation
+	if (m_iRespawnAnimTimer >= 0) {
+		int tex = m_iRespawnAnimTimer >> 2;
+		src.left = 96.f * tex;
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = m_fDrawX - 48.f;
+		rc.right = rc.left + 96.f;
+		rc.top = (m_fDrawY - 42.f) - 48.f;
+		rc.bottom = rc.top + 96.f;
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		rc.left = (m_fDrawX - 24.f) - 48.f;
+		rc.right = rc.left + 96.f;
+		rc.top = (m_fDrawY + 36.f) - 48.f;
+		rc.bottom = rc.top + 96.f;
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		rc.left = (m_fDrawX + 24.f) - 48.f;
+		rc.right = rc.left + 96.f;
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		return;
+	}
+
 	//	Core
 	src.left = m_pTextureCoord[texIndex];
 	src.top = 0.f;
@@ -413,6 +507,8 @@ void CPlayer::CalcDrawCoord(PLAYER_COORDS *playerCoords) {
 
 	playerCoords->playerX = m_fX;
 	playerCoords->playerY = m_fY;
+	playerCoords->playerVX = m_fVX;
+	playerCoords->playerVY = m_fVY;
 	playerCoords->playerAngle = m_fAngle;
 	playerCoords->playerRad = m_fRad;
 	playerCoords->playerMaxDotNum = m_iMaxDotNum;
@@ -475,6 +571,23 @@ void CPlayer::ReviveDot() {
 
 
 /**
+*@brief		近接モードで食べた数を増やす。一定以上になったらm_iMaxDotNumを増やす
+*/
+void CPlayer::IncGrowthNum() {
+	if ( ++m_iGrowthNum >= (10 + 2 * (m_iMaxDotNum - START_DOT_NUM)) ) {
+		m_iGrowthNum = 0;
+		m_iMaxDotNum++;
+		m_iDotNum++;
+		CPlayerDot *pObj = new CPlayerDot();
+		if (pObj) {
+			m_pDots.push_back(pObj);
+			m_pParent->AddPlayerDot(pObj);
+		}
+	}
+}
+
+
+/**
 *@brief		プレイヤーが押しのけられた時に位置を調整するメソッド
 */
 void CPlayer::setPos(float x, float y, float r) {
@@ -504,14 +617,14 @@ void CPlayer::DecreaseAliveDotNum() {
 *@return	true 当たり / false 外れ
 */
 bool CPlayer::collide(float x, float y, float r) {
-	if (m_iDamagedTimer > 0)
+	if (m_iDamagedTimer > 0 || m_bDamaged)
 		return false;
 
 	float vx = m_fX - x;
 	float vy = m_fY - y;
 	float l2 = vx * vx + vy * vy;
 
-	float d = (FLOAT)(CORE_LENGTH >> 1) + r;
+	float d = m_fCoreRad + r;
 	d *= d;
 
 	if (l2 < d)
@@ -520,6 +633,10 @@ bool CPlayer::collide(float x, float y, float r) {
 	return false;
 }
 
+
+/**
+*@brief		ボスのベルトとの当たり判定
+*/
 bool CPlayer::collideWithBoss(float x, float y, float r) {
 	float vx = m_fX - x;
 	float vy = m_fY - y;
@@ -540,10 +657,10 @@ bool CPlayer::collideWithBoss(float x, float y, float r) {
 *@param [in] pObj	相手オブジェクト
 */
 bool CPlayer::collide(IGameObject *pObj) {
-	if (m_iDamagedTimer > 0)
+	if (m_iDamagedTimer > 0 || m_bDamaged)
 		return false;
 
-	float x = m_fX, y = m_fY, r = (FLOAT)(CORE_LENGTH >> 1);
+	float x = m_fX, y = m_fY, r = m_fCoreRad;
 
 	return pObj->collide(x, y, r);
 }
@@ -564,5 +681,6 @@ void CPlayer::damage(float amount) {
 	}
 	else {
 		m_bDamaged = true;
+		m_iDestroyTimer--;
 	}
 }

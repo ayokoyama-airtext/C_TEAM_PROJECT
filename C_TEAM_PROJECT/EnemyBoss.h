@@ -36,6 +36,11 @@ public:
 
 	virtual void SetFlag(int flag) override;
 
+	//	攻撃行動
+	virtual void Attack1(float vx, float vy);
+	virtual void Attack2(float vx, float vy);
+	virtual void Attack3(float vx, float vy);
+
 	static void Restore(ID2D1RenderTarget *pTarget, CStage *pStage);
 	static void Finalize();
 protected:
@@ -61,6 +66,8 @@ protected:
 	INT		m_iDestroyAnimTimer;
 	INT		m_iRespawnAnimTimer;
 	INT		m_iAttackTimer;		//	攻撃用のタイマー
+	INT		m_iAttackSetIndex;	//	
+	INT		m_iAttackNumber;	//	攻撃行動の番号
 
 	int		m_iBehaviorFlag;	//	エネミーの行動状態を管理するフラグ
 	//	m_iBehaviorFlag用定数
@@ -71,13 +78,13 @@ protected:
 	static const int EFLAG_ATTACKED = 0x10;	//	攻撃後の待ち
 
 	//	定数
-	static const int BELT_RAD = 720;				//	ベルト半径
+	static const int BELT_RAD = 620;//720;				//	ベルト半径
 	static const int DOT_RAD = 24;				//	ドット半径
-	static const int CORE_LENGTH = 960;			//	コアの一辺の長さ
+	static const int CORE_LENGTH = 960;//960;			//	コアの一辺の長さ
 
 	static const float ROTATION_SPEED;			//	回転速度
 	static const float ENEMY_SPEED;				//	移動速度
-	static const float ENEMY_ESCAPE_SPEED;		//	逃走速度
+	static const float ENEMY_CHASE_SPEED;		//	逃走速度
 	static const float ENEMY_ESCAPE_ROTATION_SPEED;
 
 	static const float BULLET_ANGLE_GAP_BIG;
@@ -108,6 +115,7 @@ protected:
 	static FLOAT m_pRandomMove[];
 	static FLOAT m_pTexCoord[];
 	static const INT m_iRandomMoveSize;
+	static INT m_iAttackSet[];
 #ifdef _DEBUG
 	static ID2D1SolidColorBrush	*m_pBrush;
 	static ID2D1SolidColorBrush	*m_pRedBrush;

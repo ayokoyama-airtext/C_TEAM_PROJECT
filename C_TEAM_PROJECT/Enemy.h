@@ -72,14 +72,18 @@ protected:
 	static const int BELT_RAD = 96;				//	ベルト半径
 	static const int DOT_RAD = 24;				//	ドット半径
 	static const int CORE_LENGTH = 96;			//	コアの一辺の長さ
+
 	static const float ROTATION_SPEED;			//	回転速度
 	static const float ENEMY_SPEED;				//	移動速度
 	static const float ENEMY_ESCAPE_SPEED;		//	逃走速度
 	static const float ENEMY_ESCAPE_ROTATION_SPEED;
 	static const float ENEMY_ESCAPE_ANGLE;
 	static const float SEARCH_ANGLE;			//	索敵角度
+	static const float APPROACH_ROTATION_SPEED;
+	static const float APPROACH_SPEED;
+
 	static const int SEARCH_LENGTH = 750;		//	索敵距離
-	static const int APPROACH_LENGHT = 1240;	//	これより離れてるとプレイヤーに近寄っていく
+	static const int APPROACH_LENGHT = 1120;	//	これより離れてるとプレイヤーに近寄っていく
 	static const int MAX_CHASE_LENGTH = 800;		//	追跡時間
 	static const int ESCAPE_DURATION = 90;		//	逃走時間
 	static const int DAMAGED_DURATION = 30;		//	無敵時間

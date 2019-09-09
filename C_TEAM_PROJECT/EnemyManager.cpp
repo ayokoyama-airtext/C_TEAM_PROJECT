@@ -40,10 +40,10 @@ CEnemyManager::~CEnemyManager()
 IGameObject *CEnemyManager::CreateEnemy() {
 	IGameObject *pObj = NULL;
 
-
+#ifdef _DEBUG
 
 #if defined(yakihiro) || defined(ayokoyama)
-	
+
 	if (m_iEnemyCount > 0)
 		return pObj;
 
@@ -53,9 +53,9 @@ IGameObject *CEnemyManager::CreateEnemy() {
 		return pObj;
 	}
 
-	int waveNum = m_pEnemySetData[m_iIndex++] &65535;
-	int enemyID = m_pEnemySetData[m_iIndex++] &65535;
-	int dotNum  = m_pEnemySetData[m_iIndex++] &65535;
+	int waveNum = m_pEnemySetData[m_iIndex++] & 65535;
+	int enemyID = m_pEnemySetData[m_iIndex++] & 65535;
+	int dotNum = m_pEnemySetData[m_iIndex++] & 65535;
 
 	if (waveNum == m_iWave) {
 		float playerX = m_pParent->playerCoords.playerX;
@@ -144,6 +144,84 @@ IGameObject *CEnemyManager::CreateEnemy() {
 	pObj = new CEnemy03(1400.f, 1080.f, 1.f);
 	m_iEnemyCount++;
 #endif
+
+#else
+	if (m_iEnemyCount > 0)
+		return pObj;
+
+	if (m_iIndex == m_szEnemySetDataSize) {
+		m_iIndex = 0;
+		m_iWave = 0;
+		return pObj;
+	}
+
+	int waveNum = m_pEnemySetData[m_iIndex++] & 65535;
+	int enemyID = m_pEnemySetData[m_iIndex++] & 65535;
+	int dotNum = m_pEnemySetData[m_iIndex++] & 65535;
+
+	if (waveNum == m_iWave) {
+		float playerX = m_pParent->playerCoords.playerX;
+		float playerY = m_pParent->playerCoords.playerY;
+
+		if (enemyID == 999) {
+			enemyID = ((rand() >> 4) % 2) + 1;
+		}
+
+		float RespawnX = playerX + (-1080 + 1080 * (m_iRespawnNum % 3));
+		if (RespawnX >= m_pParent->FIELD_WIDTH) {
+			RespawnX -= m_pParent->FIELD_WIDTH;
+		}
+		else if (RespawnX <= 0) {
+			RespawnX += m_pParent->FIELD_WIDTH;
+		}
+
+		float RespawnY = playerY + (-960 + 960 * (m_iRespawnNum & 1) * 2);
+		if (RespawnY >= m_pParent->FIELD_HEIGHT) {
+			RespawnY -= m_pParent->FIELD_HEIGHT;
+		}
+		else if (RespawnY <= 0) {
+			RespawnY += m_pParent->FIELD_HEIGHT;
+		}
+
+		switch (enemyID) {
+		case 1:
+			pObj = new CEnemy(RespawnX, RespawnY, 1.f, dotNum);
+			break;
+		case 2:
+			pObj = new CEnemy02(RespawnX, RespawnY, 1.f);
+			break;
+		case 3:
+			pObj = new CEnemy03(RespawnX, RespawnY, 1.f);
+			break;
+		case 4:
+			pObj = new CEnemy04(RespawnX, RespawnY, 1.f);
+			break;
+		case 5:
+			pObj = new CEnemy05(RespawnX, RespawnY, 1.f);
+			break;
+		case 6:
+			pObj = new CEnemy06(RespawnX, RespawnY, 1.f);
+			break;
+
+		case 100:
+			pObj = new CEnemyBoss(RespawnX, RespawnY, 1.f);
+			break;
+		}
+		m_iRespawnNum++;
+		if (m_iIndex == m_szEnemySetDataSize) {
+			m_iEnemyCount = m_iRespawnNum;
+			m_iRespawnNum = 0;
+			m_iIndex = m_szEnemySetDataSize;
+		}
+	}
+	else {
+		m_iIndex -= PITCH;
+		m_iEnemyCount = m_iRespawnNum;
+		m_iRespawnNum = 0;
+	}
+#endif
+
+
 	
 
 	return pObj;
@@ -186,7 +264,7 @@ void CEnemyManager::DecreaseEnemyCount() {
 
 //	PITCH : 2 -> Wave番号, エネミー種類(100:Boss), ドット数
 SHORT CEnemyManager::m_pEnemySetData[] = {
-	0, 1, 5,
+	/*0, 1, 5,*/
 	/*0, 1, 1,
 	0, 1, 1,
 	1, 1, 2,
@@ -195,7 +273,7 @@ SHORT CEnemyManager::m_pEnemySetData[] = {
 	2, 1, 2,
 	2, 1, 3,
 	2, 1, 4,*/
-	/*0, 100, 0,*/
+	0, 100, 0,
 };
 
 size_t CEnemyManager::m_szEnemySetDataSize = sizeof(CEnemyManager::m_pEnemySetData) / sizeof(SHORT);

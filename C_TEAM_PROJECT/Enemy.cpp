@@ -21,6 +21,9 @@ const float CEnemy::ROTATION_SPEED = 0.025f;
 const float CEnemy::ENEMY_SPEED = 5.f;
 const float CEnemy::ENEMY_ESCAPE_SPEED = 8.f;
 const float CEnemy::ENEMY_ESCAPE_ROTATION_SPEED = 0.2f;
+const float CEnemy::APPROACH_ROTATION_SPEED = 0.2f;
+const float CEnemy::APPROACH_SPEED = 10.f;
+
 const float CEnemy::ENEMY_ESCAPE_ANGLE = cosf(PI * 0.5f);
 const float CEnemy::SEARCH_ANGLE = cosf(PI * 0.5f);
 
@@ -169,31 +172,31 @@ bool CEnemy::move() {
 				l = 1.0f / l;
 				float sin = (dirVX * vy - dirVY * vx);
 				if (sin > 0) {	//	プレイヤーは進行方向右側
-					if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+					if (cos > cosf(APPROACH_ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
 						m_fVX = vx * l;
 						m_fVY = vy * l;
 						m_fAngle = atan2(m_fVY, m_fVX);
-						m_fVX *= ENEMY_SPEED;
-						m_fVY *= ENEMY_SPEED;
+						m_fVX *= APPROACH_SPEED;
+						m_fVY *= APPROACH_SPEED;
 					}
 					else {
 						m_fVX = 0;
 						m_fVY = 0;
-						m_fAngle += ROTATION_SPEED;
+						m_fAngle += APPROACH_ROTATION_SPEED;
 					}
 				}
 				else {	//	プレイヤーは進行方向左側
-					if (cos > cosf(ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
+					if (cos > cosf(APPROACH_ROTATION_SPEED)) {	//	1フレームの回転可能角度以内なら
 						m_fVX = vx * l;
 						m_fVY = vy * l;
 						m_fAngle = atan2(m_fVY, m_fVX);
-						m_fVX *= ENEMY_SPEED;
-						m_fVY *= ENEMY_SPEED;
+						m_fVX *= APPROACH_SPEED;
+						m_fVY *= APPROACH_SPEED;
 					}
 					else {
 						m_fVX = 0;
 						m_fVY = 0;
-						m_fAngle -= ROTATION_SPEED;
+						m_fAngle -= APPROACH_ROTATION_SPEED;
 					}
 				}
 			}
@@ -535,6 +538,7 @@ void CEnemy::damage(float amount) {
 	else {
 		m_bDamaged = true;
 		m_iDestroyAnimTimer--;
+		CSoundManager::PlayOneShot(SE_EXPLOSION, 1.0f);
 	}
 }
 

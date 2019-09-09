@@ -40,6 +40,7 @@ CPlayerDot::CPlayerDot()
 	m_fAngle = 0;
 	m_iState = 1;
 	m_iDestroyAnimTimer = 12;
+	m_iRespawnAnimTimer = 24;
 }
 
 
@@ -51,6 +52,11 @@ CPlayerDot::~CPlayerDot()
 
 bool CPlayerDot::move() {
 
+	//--------------------------------------------------------
+	//					リスポーン/死亡処理
+	//--------------------------------------------------------
+
+
 	//	壊れてたら戻る
 	if (!m_iState) {
 		if (m_iDestroyAnimTimer >= 0) {
@@ -59,6 +65,15 @@ bool CPlayerDot::move() {
 		return true;
 	}
 
+
+	if (m_iRespawnAnimTimer >= 0)
+		m_iRespawnAnimTimer--;
+
+	//--------------------------------------------------------
+	//				通常処理
+	//--------------------------------------------------------
+
+	//	straw用タイマー
 	if (false == m_pParent->playerCoords.playerIsWHmode) {
 		m_iTimer++;
 	}
@@ -100,6 +115,7 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 	D2D1::Matrix3x2F rotation = D2D1::Matrix3x2F::Rotation(degreeAngle, center);
 	pRenderTarget->SetTransform(rotation);
 
+	//	destroy animation
 	if (!m_iState) {
 		int index = (11 - m_iDestroyAnimTimer) >> 2;
 		src.left = 96.f * index;
@@ -116,6 +132,31 @@ void CPlayerDot::draw(ID2D1RenderTarget *pRenderTarget) {
 		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 		return;
 	}
+
+	//	respawn animation
+	if (m_iRespawnAnimTimer >= 0) {
+		if (m_iRespawnAnimTimer >= 12) {
+			pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+			return;
+		}
+
+		int tex = (m_iRespawnAnimTimer) >> 2;
+		src.left = tex * 96.f;
+		src.right = src.left + 96.f;
+		src.top = 0.f;
+		src.bottom = src.top + 96.f;
+
+		rc.left = center.x - 48.f;
+		rc.right = rc.left + 96.f;
+		rc.top = center.y - 48.f;
+		rc.bottom = rc.top + 96.f;
+
+		pRenderTarget->DrawBitmap(m_pDestroyImage, rc, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, src);
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+
+		return;
+	}
+
 
 	//	Dot
 	src.left = 0.f;

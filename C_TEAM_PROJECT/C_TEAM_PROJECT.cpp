@@ -5,11 +5,10 @@
 */
 #include "stdafx.h"
 #include <crtdbg.h>
-#include <tchar.h>
 #include <stdio.h>
 #include <d2d1.h>
-#include <dwrite.h>
 #include <cmath>
+#include "C_TEAM_PROJECT.h"
 #include "Selector.h"
 
 
@@ -60,7 +59,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	WNDCLASSEX wcex;	//	ウィンドウクラス構造体
 	HWND	hWnd;		//	ウィンドウハンドル
 	RECT	bounds, client;	//	RECT構造体
-	DEVMODE	devMode;
+	//DEVMODE	devMode;
 
 
 	/*********************
@@ -112,10 +111,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		1080 * 2 - client.bottom,
 		false);
 
-	// ウィンドウの再表示
-	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
-	UpdateWindow(hWnd);
-	//	再表示の際、WndProcが呼び出されることに注意！
+	
 
 
 	//	⑴-c Direct2Dの初期化
@@ -130,21 +126,23 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			1080
 		);
 
-		D2D1_RENDER_TARGET_PROPERTIES target;
+		/*D2D1_RENDER_TARGET_PROPERTIES target;
 		target.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
 		target.pixelFormat = D2D1::PixelFormat();
 		target.usage = D2D1_RENDER_TARGET_USAGE_NONE;
 		target.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
 		target.dpiX = 0;
-		target.dpiY = 0;
+		target.dpiY = 0;*/
 
 
 		//	Direct2D 描画ターゲット の生成
 		hr = g_pD2DFactory->CreateHwndRenderTarget(
-			target,
+			D2D1::RenderTargetProperties(),
 			D2D1::HwndRenderTargetProperties(hWnd, size),
 			&g_pRenderTarget
 		);
+
+		;
 	}
 
 
@@ -160,6 +158,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	InvalidateRect(hWnd, NULL, false);
 
+	// ウィンドウの再表示
+	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+	UpdateWindow(hWnd);
+	//	再表示の際、WndProcが呼び出されることに注意！
 
 	/**************************
 		⑵メッセージループ
@@ -202,6 +204,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	SAFE_RELEASE(g_pRenderTarget);
 	SAFE_RELEASE(g_pD2DFactory);
 
+	CoUninitialize();
+
 	return (int)msg.wParam;
 }
 
@@ -214,9 +218,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
 	switch (message) {
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
 
 	case WM_PAINT:
-		if (g_pRenderTarget) {
+		if (g_pRenderTarget != NULL) {
 			g_pRenderTarget->BeginDraw();	//	描画開始
 
 			g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());	// Transform の設定
@@ -236,9 +243,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 
 
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
 
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE) {

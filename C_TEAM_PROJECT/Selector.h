@@ -5,9 +5,9 @@
 */
 #pragma once
 
-#ifndef __IGAMESCENE_H__
-#include "IGameScene.h"
-#endif
+//#ifndef __IGAMESCENE_H__
+//#include "IGameScene.h"
+//#endif
 
 enum GamePhase {
 	GAMEPHASE_INIT		= 0,
@@ -44,7 +44,9 @@ public:
 	int GetEndScore() { return m_iEndScore; }
 
 	ID2D1RenderTarget	*GetRenderTarget();
+#ifdef _DEBUG
 	IDWriteTextFormat	*GetTextFormat();
+#endif
 protected:
 	ID2D1RenderTarget		*m_pRenderTarget;
 	int	m_iEndTime;		//	ゲームクリア/オーバー 時のタイム
@@ -71,3 +73,11 @@ protected:
 #define SAFE_RELEASE(o) if(o){ (o)->Release(); o = NULL; }
 #define SAFE_DELETE(o)	if(o){ delete (o); o = NULL; }
 #define SAFE_DELETE_ARRAY if(o){ delete [] (o); o = NULL; }
+
+#define SE_SHOT_FILE			_T("res\\sound\\shoot.wav")
+#define SE_EXPLOSION_FILE		_T("res\\sound\\explosion.wav")
+#define SE_EXPLOSION_BOSS_FILE	_T("res\\sound\\explosion_boss.wav")
+#define BGM_TITLE_FILE			_T("res\\sound\\title.wav")
+#define BGM_STAGE_FILE			_T("res\\sound\\stage.wav")
+#define BGM_BOSS_FILE			_T("res\\sound\\boss.wav")
+#define BGM_RESULT_FILE			_T("res\\sound\\result.wav")

@@ -51,3 +51,5 @@ protected:
 #endif
 };
 
+
+#define BULLET_SPEED 10.f

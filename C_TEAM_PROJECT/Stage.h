@@ -6,6 +6,10 @@
 #pragma once
 #include "Selector.h"
 
+#ifndef __IGAMESCENE_H__
+#include "IGameScene.h"
+#endif
+
 #ifndef __IGAMEOBJECT_H__
 #include "IGameObject.h"
 #endif
@@ -31,6 +35,8 @@ enum DRAW_SITUATION {
 typedef struct {
 	FLOAT	playerX;
 	FLOAT	playerY;
+	FLOAT	playerVX;
+	FLOAT	playerVY;
 	FLOAT	playerDrawX;
 	FLOAT	playerDrawY;
 	FLOAT	playerAngle;
@@ -66,8 +72,9 @@ public:
 	virtual int GetScore();
 	virtual int GetTimer();
 
-	virtual void SetBoss(CEnemyBoss *pBoss) { m_pBoss = pBoss; }
-	virtual void RemoveBoss() { m_pBoss = NULL; }
+	virtual void SetBoss(CEnemyBoss *pBoss);
+	virtual void RemoveBoss();
+	virtual void SetClearFlag() { m_iGameFinishState = GAME_CLEAR; }
 
 	ID2D1RenderTarget *GetRenderTarget();
 
@@ -96,6 +103,8 @@ protected:
 	UINT		m_iScore;
 	UINT		m_iTimer;	//	éûä‘êßå¿óp
 	UINT		m_iGameFinishState;
+	UINT		m_iCurrentBGMNum;
+	int			m_iBGMChangeTimer;
 	//	m_iGameFinishState ópíËêî
 	static const int GAME_CLEAR = 0x02;
 	static const int GAME_OVER = 0x04;
@@ -113,3 +122,9 @@ protected:
 #define DISPLAY_RESOLUTION_WIDTH	1920
 #define DISPLAY_RESOLUTION_HEIGHT	1080
 
+#define BGM_STAGE	0
+#define BGM_BOSS	1
+
+#define SE_SHOT			0
+#define SE_EXPLOSION	1
+#define SE_EXPLOSION_BOSS	2

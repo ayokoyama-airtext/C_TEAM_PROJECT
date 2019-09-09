@@ -3,6 +3,7 @@
 * @brief ƒNƒ‰ƒX CTitle ‚ÌŽÀ‘•
 */
 #include "stdafx.h"
+#include "SoundManager.h"
 #include <d2d1.h>
 #include <dwrite.h>
 #include "Selector.h"
@@ -27,6 +28,7 @@ CTitle::CTitle(CSelector *pSystem)
 		pTarget = NULL;
 	}
 	mFrame = 0;
+
 }
 
 
